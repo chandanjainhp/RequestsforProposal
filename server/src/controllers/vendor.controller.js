@@ -72,11 +72,11 @@ export const getVendor = async (req, res) => {
 /**
  * POST /api/vendors
  * Create a new vendor
- * Body: { name, contact_email, contact_person, phone, address, notes, active }
+ * Body: { name, contact_email, contact_person, phone, address, notes, active, rating, categories, status }
  */
 export const createVendor = async (req, res) => {
   try {
-    const { name, contact_email, contact_person, phone, address, notes, active } = req.body;
+    const { name, contact_email, contact_person, phone, address, notes, active, rating, categories, status } = req.body;
     
     if (!name) {
       return res.status(400).json({
@@ -96,6 +96,12 @@ export const createVendor = async (req, res) => {
       }
     }
     
+    // Convert status to active boolean
+    let isActive = active !== false;
+    if (status) {
+      isActive = status === 'active' || status === 'preferred' || status === 'new';
+    }
+    
     const vendor = new Vendor({
       name,
       contact_email,
@@ -103,7 +109,9 @@ export const createVendor = async (req, res) => {
       phone,
       address,
       notes,
-      active: active !== false // defaults to true
+      active: isActive,
+      rating: rating || 0,
+      categories: categories || []
     });
     
     await vendor.save();
@@ -135,12 +143,12 @@ export const createVendor = async (req, res) => {
 /**
  * PUT /api/vendors/:id
  * Update a vendor
- * Body: { name, contact_email, contact_person, phone, address, notes, active }
+ * Body: { name, contact_email, contact_person, phone, address, notes, active, rating, categories, status }
  */
 export const updateVendor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, contact_email, contact_person, phone, address, notes, active } = req.body;
+    const { name, contact_email, contact_person, phone, address, notes, active, rating, categories, status } = req.body;
     
     const vendor = await Vendor.findById(id);
     if (!vendor) {
@@ -169,6 +177,13 @@ export const updateVendor = async (req, res) => {
     if (address !== undefined) vendor.address = address;
     if (notes !== undefined) vendor.notes = notes;
     if (active !== undefined) vendor.active = active;
+    if (rating !== undefined) vendor.rating = rating;
+    if (categories !== undefined) vendor.categories = categories;
+    
+    // Handle status field from frontend
+    if (status !== undefined) {
+      vendor.active = status === 'active' || status === 'preferred' || status === 'new';
+    }
     
     vendor.updated_at = new Date();
     

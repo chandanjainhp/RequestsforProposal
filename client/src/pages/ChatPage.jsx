@@ -88,37 +88,34 @@ export default function ChatPage() {
     try {
       // Call parse endpoint
       const result = await parseRfp(message);
+      
+      console.log('📦 API Result:', result);
+      
+      // Safely get confidence value (default to 0.3 if missing)
+      const confidence = typeof result.parse_confidence === 'number' ? result.parse_confidence : 0.3;
+      const confidencePercent = Math.round(confidence * 100);
+      
+      console.log('🎯 Parse Confidence:', confidence, '=', confidencePercent + '%');
 
       // Add AI response
       addMessage({
-        text: `✅ RFP parsed successfully! (Confidence: ${(result.parse_confidence * 100).toFixed(0)}%)`,
+        text: `✅ RFP parsed successfully! (Confidence: ${confidencePercent}%)`,
         isUser: false,
         timestamp: new Date(),
       });
 
       // Store parsed RFP - handle both old and new response formats
       let rfpToStore;
-      console.log('📦 API Result:', result);
-      console.log('🎯 Parse Confidence from API:', result.parse_confidence, 'Type:', typeof result.parse_confidence);
+      const parsedData = result.parsed_rfp || result.parsed_data || result;
       
-      if (result.parsed_rfp) {
-        rfpToStore = {
-          ...result.parsed_rfp,
-          confidence: result.parse_confidence !== undefined ? result.parse_confidence : 0.3,
-          title: result.parsed_rfp.title || 'Untitled RFP',
-          description: result.parsed_rfp.description || result.parsed_rfp.summary || '',
-        };
-      } else if (result.parsed_data) {
-        rfpToStore = {
-          ...result.parsed_data,
-          confidence: result.parse_confidence !== undefined ? result.parse_confidence : 0.3,
-          title: result.parsed_data.title || 'Untitled RFP',
-          description: result.parsed_data.description || result.parsed_data.summary || '',
-        };
-      }
+      rfpToStore = {
+        ...parsedData,
+        confidence: confidence,
+        title: parsedData.title || 'Untitled RFP',
+        description: parsedData.description || parsedData.summary || '',
+      };
 
       console.log('💾 RFP to Store:', rfpToStore);
-      console.log('✅ Confidence value:', rfpToStore?.confidence, '=', (rfpToStore?.confidence * 100).toFixed(0) + '%');
 
       // Fallback parsing for budget and delivery if AI missed them
       if (!rfpToStore.budget && message.toLowerCase().includes('budget')) {

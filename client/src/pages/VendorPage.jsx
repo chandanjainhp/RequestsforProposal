@@ -166,7 +166,9 @@ export default function VendorPage() {
       await loadVendors();
     } catch (err) {
       console.error('Error saving vendor:', err);
-      addError('❌ Failed to save vendor. Please try again.');
+      // Show more specific error message from server
+      const errorMessage = err.response?.data?.message || err.message || 'Unknown error';
+      addError(`❌ Failed to save vendor: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

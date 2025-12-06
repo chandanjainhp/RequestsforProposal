@@ -17,7 +17,24 @@ app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
   credentials: true
 }));
+
+// JSON parser with error handling
 app.use(express.json());
+
+// Error handler for JSON parsing errors
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    logger.error(`[JSON PARSE ERROR] ${err.message}`);
+    logger.error(`[JSON PARSE ERROR] URL: ${req.method} ${req.url}`);
+    logger.error(`[JSON PARSE ERROR] Content-Type: ${req.headers['content-type']}`);
+    return res.status(400).json({ 
+      ok: false, 
+      error: 'Invalid JSON in request body',
+      details: err.message 
+    });
+  }
+  next(err);
+});
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'src', 'uploads');
 app.use('/uploads', express.static(UPLOAD_DIR));

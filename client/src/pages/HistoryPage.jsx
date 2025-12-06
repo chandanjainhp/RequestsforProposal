@@ -3,32 +3,64 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ChevronDown, Plus } from 'lucide-react';
 import HistoryCard from '../components/HistoryCard';
 import Breadcrumb from '../components/Breadcrumb';
+import { getRfps } from '../api/rfp';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  // const { drafts } = useRfpStore(); // For future use with real data
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
   const [filteredHistory, setFilteredHistory] = useState([]);
-  const [mockHistory, setMockHistory] = useState([]);
+  const [rfpHistory, setRfpHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
-  // Load conversation history (replace with real API call when available)
+  // Load RFP history from API
   useEffect(() => {
-    // TODO: Replace with actual API call to get conversation history
-    // For now, start with empty state
-    setMockHistory([]);
-    setFilteredHistory([]);
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await getRfps();
+
+        // Transform RFP data to history format
+        const rfps = response.rfps || response.data || response || [];
+        const historyData = rfps.map(rfp => ({
+          id: rfp._id,
+          rfpId: rfp._id,
+          title: rfp.title || 'Untitled RFP',
+          status: rfp.status || 'draft',
+          budget: rfp.budget || 0,
+          currency: rfp.currency || 'USD',
+          messagePreview: rfp.summary || rfp.description || 'No description',
+          itemsSummary: rfp.line_items?.map(item => item.name).join(', ') || 'No items',
+          itemCount: rfp.line_items?.length || 0,
+          createdAt: rfp.created_at || rfp.createdAt,
+          lastEditedAt: rfp.updated_at || rfp.sent_at || rfp.created_at || rfp.createdAt,
+          deliveryDays: rfp.delivery_days,
+          warrantyMonths: rfp.warranty_months
+        }));
+
+        setRfpHistory(historyData);
+        setFilteredHistory(historyData);
+      } catch (error) {
+        console.error('Error loading RFP history:', error);
+        setRfpHistory([]);
+        setFilteredHistory([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
   }, []);
 
   // Filter and search logic
   useEffect(() => {
-    let filtered = mockHistory.slice();
+    let filtered = rfpHistory.slice();
 
     // Status filter
     if (statusFilter !== 'all') {
@@ -54,9 +86,9 @@ export default function HistoryPage() {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(searchLower) ||
-        item.messagePreview.toLowerCase().includes(searchLower) ||
-        item.itemsSummary.toLowerCase().includes(searchLower)
+        item.title?.toLowerCase().includes(searchLower) ||
+        item.messagePreview?.toLowerCase().includes(searchLower) ||
+        item.itemsSummary?.toLowerCase().includes(searchLower)
       );
     }
 
@@ -66,18 +98,17 @@ export default function HistoryPage() {
     } else if (sortBy === 'oldest') {
       filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
     } else if (sortBy === 'budget-high') {
-      filtered.sort((a, b) => b.budget - a.budget);
+      filtered.sort((a, b) => (b.budget || 0) - (a.budget || 0));
     } else if (sortBy === 'budget-low') {
-      filtered.sort((a, b) => a.budget - b.budget);
+      filtered.sort((a, b) => (a.budget || 0) - (b.budget || 0));
     } else if (sortBy === 'alphabetical') {
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
+      filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
 
     setFilteredHistory(filtered);
-  }, [searchTerm, statusFilter, timeFilter, sortBy, mockHistory]);
+  }, [searchTerm, statusFilter, timeFilter, sortBy, rfpHistory]);
 
   const handleViewChat = (conversationId) => {
-    // In production, would navigate to chat view with history
     navigate(`/chat/${conversationId}`);
   };
 
@@ -100,10 +131,10 @@ export default function HistoryPage() {
     setSearchTerm('');
   };
 
-  const handleDeleteItem = (conversationId) => {
-    // Confirm before delete
-    if (window.confirm('Are you sure you want to delete this conversation?')) {
-      setMockHistory(mockHistory.filter(item => item.id !== conversationId));
+  const handleDeleteItem = async (conversationId) => {
+    if (window.confirm('Are you sure you want to delete this RFP?')) {
+      // TODO: Add API call to delete RFP
+      setRfpHistory(rfpHistory.filter(item => item.id !== conversationId));
     }
   };
 
@@ -290,8 +321,21 @@ export default function HistoryPage() {
           )}
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* History List */}
-        {filteredHistory.length === 0 ? (
+        {!loading && filteredHistory.length === 0 && (
           <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 py-12 text-center">
             {searchTerm || statusFilter !== 'all' || timeFilter !== 'all' ? (
               <>
@@ -318,8 +362,8 @@ export default function HistoryPage() {
             ) : (
               <>
                 <div className="text-4xl mb-3">📜</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Chat History Yet</h3>
-                <p className="text-sm text-gray-600 mb-4">Start a conversation to create your first RFP. Your chat history will appear here.</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No RFP History Yet</h3>
+                <p className="text-sm text-gray-600 mb-4">Start a conversation to create your first RFP. Your history will appear here.</p>
                 <button
                   onClick={handleStartNew}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center gap-2"
@@ -330,7 +374,9 @@ export default function HistoryPage() {
               </>
             )}
           </div>
-        ) : (
+        )}
+
+        {!loading && filteredHistory.length > 0 && (
           <div className="space-y-4">
             {filteredHistory.map((item) => (
               <HistoryCard
@@ -347,7 +393,7 @@ export default function HistoryPage() {
         {/* Results count */}
         {filteredHistory.length > 0 && (
           <div className="mt-6 text-sm text-gray-600 text-center">
-            Showing {filteredHistory.length} of {mockHistory.length} conversations
+            Showing {filteredHistory.length} of {rfpHistory.length} RFPs
           </div>
         )}
       </div>

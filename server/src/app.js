@@ -16,10 +16,8 @@ const app = express()
 
 // Configure and apply CORS middleware to all routes
 app.use(cors({
-    // Set which domain(s) are allowed to make requests to this API
-    // process.env.CORS_ORIGIN should contain the frontend URL (e.g., "http://localhost:3000")
-    // This prevents unauthorized websites from accessing your API
-    origin: process.env.CORS_ORIGIN,
+    // Allow requests from frontend dev server and any localhost
+    origin: process.env.CORS_ORIGIN || ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
     
     // Allow cookies and authorization headers to be sent with cross-origin requests
     // This is essential for authentication systems that use cookies or JWT tokens

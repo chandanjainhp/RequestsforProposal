@@ -4,10 +4,23 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
+// Load environment variables first
 dotenv.config();
 
-// Initialize Gemini AI with unified API key
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize Gemini AI lazily to ensure env vars are loaded
+let genAI = null;
+function getGenAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('[AI] GEMINI_API_KEY is not set in environment!');
+      return null;
+    }
+    console.log('[AI] Initializing Gemini AI with key:', apiKey.substring(0, 10) + '...');
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
+}
 
 const RFP_PARSE_PROMPT = `You are an expert RFP (Request for Proposal) parser. Extract ALL structured data from the following text.
 
@@ -39,7 +52,9 @@ Rules:
 - Examples of line items: "10 managed switches" -> {"name": "managed switches", "quantity": 10}
 - Examples: "5 routers" -> {"name": "routers", "quantity": 5}
 - Examples: "necessary cabling" -> {"name": "cabling", "quantity": 1}
-- For budget: "under $5,000" or "$5,000 budget" or "budget of $5,000" -> budget: 5000
+- CRITICAL for budget: ANY dollar/currency amount mentioned IS the budget
+- Budget examples: "$5000" = budget: 5000, "budget of $5,000" = budget: 5000
+- Budget examples: "under $10K" = budget: 10000, "$50,000 total" = budget: 50000
 - For delivery: "within 2 weeks" = delivery_days: 14, "by next month" = delivery_days: 30
 - For "X year warranty/support", convert to months (1 year = 12 months, 3 years = 36 months)
 - For "$50K" or "50K", convert to 50000
@@ -56,24 +71,38 @@ Text to parse:
 // Call Gemini AI for parsing
 async function callGeminiAI(prompt, text) {
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',  // Using the model from env config
+    const ai = getGenAI();
+    if (!ai) {
+      return { success: false, error: 'GEMINI_API_KEY not configured' };
+    }
+    
+    console.log('[AI] Calling Gemini with text length:', text.length);
+    
+    const model = ai.getGenerativeModel({ 
+      model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
       generationConfig: {
         temperature: 0.1,  // Low temperature for consistent output
         topP: 0.8,
         maxOutputTokens: 2048,
       }
     });
+    
     const result = await model.generateContent(prompt + text);
     const response = await result.response;
     let responseText = response.text();
-    console.log('[AI] Raw response:', responseText.substring(0, 500));
+    
+    console.log('[AI] Raw response length:', responseText.length);
+    console.log('[AI] Raw response preview:', responseText.substring(0, 300));
+    
     responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
     const parsed = JSON.parse(responseText);
-    console.log('[AI] Parsed line_items:', parsed.line_items?.length || 0);
+    console.log('[AI] Successfully parsed JSON, line_items:', parsed.line_items?.length || 0);
+    
     return { success: true, data: parsed };
   } catch (error) {
-    console.error('Gemini AI error:', error.message);
+    console.error('[AI ERROR] Gemini AI failed:', error.message);
+    console.error('[AI ERROR] Full error:', error);
     return { success: false, error: error.message };
   }
 }
@@ -100,8 +129,25 @@ function fallbackParseRfp(text) {
   }
   if (text.match(/\$/)) parsed.currency = 'USD';
   else if (text.match(/₹|Rs\.?|INR/i)) parsed.currency = 'INR';
-  const deliveryMatch = text.match(/(?:within|completed\s+within|delivery)\s*(\d+)\s*days?/i);
-  if (deliveryMatch) parsed.delivery_days = parseInt(deliveryMatch[1]);
+  
+  // Delivery time - check for days first
+  let deliveryMatch = text.match(/(?:within|completed\s+within|delivery\s+(?:in|within)?)\s*(\d+)\s*days?/i);
+  if (deliveryMatch) {
+    parsed.delivery_days = parseInt(deliveryMatch[1]);
+  } else {
+    // Check for weeks
+    const weekMatch = text.match(/(?:within|in|delivery\s+(?:in|within)?)\s*(\d+)\s*weeks?/i);
+    if (weekMatch) {
+      parsed.delivery_days = parseInt(weekMatch[1]) * 7;
+    } else {
+      // Check for months
+      const monthMatch = text.match(/(?:within|in|delivery\s+(?:in|within)?)\s*(\d+)\s*months?/i);
+      if (monthMatch) {
+        parsed.delivery_days = parseInt(monthMatch[1]) * 30;
+      }
+    }
+  }
+  
   const warrantyMatch = text.match(/(\d+)[-\s]?year\s+(?:warranty|support)/i);
   if (warrantyMatch) parsed.warranty_months = parseInt(warrantyMatch[1]) * 12;
   const paymentMatch = text.match(/payment\s+terms?\s+(?:should\s+be\s+|:?\s*)?(net\s+\d+)/i);
