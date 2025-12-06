@@ -23,8 +23,14 @@ const parseRfp = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Parse using LLM adapter
-    const result = llmAdapter.parseRfp(message);
+    // Parse using LLM adapter (AI-powered)
+    const result = await llmAdapter.parseRfp(message);
+    
+    console.log('🔍 Parse Result from Adapter:', {
+      parse_confidence: result.parse_confidence,
+      confidence_type: typeof result.parse_confidence,
+      parsed_rfp_keys: Object.keys(result.parsed_rfp || {})
+    });
     
     // Validate parsed RFP structure
     const validation = validator.validateRfp(result.parsed_rfp);
@@ -37,12 +43,16 @@ const parseRfp = asyncHandler(async (req, res) => {
 
     logger.info(`RFP parsed: confidence=${result.parse_confidence}, fields=${Object.values(result.parsed_rfp).filter(v => v !== null).length}`);
 
-    return res.status(200).json({
+    const response = {
       ok: true,
       parsed_rfp: result.parsed_rfp,
       parse_confidence: result.parse_confidence,
       warnings: result.warnings
-    });
+    };
+    
+    console.log('📤 Sending Response:', response.parse_confidence);
+
+    return res.status(200).json(response);
   } catch (error) {
     logger.error(`RFP parse error: ${error.message}`);
     return res.status(500).json({

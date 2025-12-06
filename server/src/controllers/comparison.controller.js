@@ -51,17 +51,25 @@ export const compareProposals = async (req, res) => {
     // Build response: each proposal with its score
     const comparisons = proposals.map((proposal) => {
       const score = scoreMap[proposal._id];
+      const parsed = proposal.parsed || {};
       return {
         proposal_id: proposal._id,
         vendor_id: proposal.vendor_id?._id,
-        vendor_name: proposal.vendor_id?.name || 'Unknown',
+        vendor_name: parsed.vendor_name || proposal.vendor_id?.name || 'Unknown',
         vendor_email: proposal.vendor_id?.contact_email,
+        total_price: parsed.total_price,
+        currency: parsed.currency || 'USD',
+        delivery_days: parsed.delivery_days,
+        warranty_months: parsed.warranty_months,
+        payment_terms: parsed.payment_terms,
+        line_items: parsed.line_items || [],
+        technical_specs: parsed.technical_specs,
+        certifications: parsed.certifications,
         parse_confidence: proposal.parse_confidence,
         final_score: score?.score || null,
         score_breakdown: score?.breakdown || null,
         reasoning: score?.reasoning || 'Score pending',
         needs_review: proposal.needs_review,
-        parsed: proposal.parsed,
         created_at: proposal.created_at,
       };
     });

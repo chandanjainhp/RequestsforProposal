@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
+import cors from 'cors';
 import path from 'path';
 
 import emailInbound from './src/routes/emailInbound.js';
@@ -12,6 +13,10 @@ import healthRouter from './src/routes/health.router.js';
 import logger from './src/utils/logger.js';
 
 const app = express();
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
+  credentials: true
+}));
 app.use(express.json());
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'src', 'uploads');

@@ -7,6 +7,9 @@ const VendorSchema = new mongoose.Schema({
   address: String,
   notes: String,
   active: { type: Boolean, default: true },
+  rating: { type: Number, min: 0, max: 5, default: 3 },
+  categories: [{ type: String }],
+  past_rfps: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });

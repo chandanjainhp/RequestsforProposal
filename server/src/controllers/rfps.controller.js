@@ -35,7 +35,8 @@ const saveRfp = asyncHandler(async (req, res) => {
     // Create RFP document
     const rfp = new Rfp({
       title: parsed_rfp.title,
-      description: parsed_rfp.description,
+      description: parsed_rfp.description || parsed_rfp.summary,
+      summary: parsed_rfp.summary || parsed_rfp.description,
       budget: parsed_rfp.budget,
       currency: parsed_rfp.currency || 'USD',
       delivery_days: parsed_rfp.delivery_days,
@@ -55,6 +56,7 @@ const saveRfp = asyncHandler(async (req, res) => {
 
     return res.status(201).json({
       ok: true,
+      _id: rfp._id.toString(),
       rfp_id: rfp._id.toString(),
       reply_to_token,
       status: 'draft'
@@ -164,7 +166,7 @@ const updateRfp = asyncHandler(async (req, res) => {
 
     // Allowed fields to update
     const allowedFields = [
-      'title', 'description', 'budget', 'currency',
+      'title', 'description', 'summary', 'budget', 'currency',
       'delivery_days', 'delivery_date', 'payment_terms',
       'warranty_months', 'line_items', 'raw_text'
     ];
@@ -239,9 +241,11 @@ const sendRfp = async (req, res) => {
       results = vendors.map(v => ({ vendor_id: v._id, vendor_email: v.contact_email, success: false, error: emailError.message }));
     }
 
-    // Update RFP status
+    // Update RFP status and track vendors
     rfp.status = 'sent';
     rfp.sent_at = new Date();
+    rfp.sent_to_vendors = vendors.map(v => v._id);
+    rfp.vendor_emails = vendors.map(v => v.contact_email);
     await rfp.save();
 
     logger.info(`RFP sent: _id=${rfp._id}, vendors=${vendors.length}, status=sent`);

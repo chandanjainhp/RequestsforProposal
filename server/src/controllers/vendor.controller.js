@@ -1,17 +1,25 @@
 import Vendor from '../models/Vendor.js';
 
+// Force reload - vendor list filtering fix
 /**
  * GET /api/vendors
  * List all vendors with optional filtering by active status
- * Query params: active=true|false
+ * Query params: active=true|false|all (default: true - only active vendors)
  */
 export const listVendors = async (req, res) => {
   try {
     const { active } = req.query;
     const filter = {};
     
-    if (active !== undefined) {
-      filter.active = active === 'true';
+    // By default, only show active vendors
+    // Use active=all to show all vendors including deactivated
+    if (active === 'all') {
+      // No filter - show all
+    } else if (active === 'false') {
+      filter.active = false;
+    } else {
+      // Default: show only active vendors
+      filter.active = true;
     }
     
     const vendors = await Vendor.find(filter).sort({ name: 1 });

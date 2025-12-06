@@ -1,8 +1,14 @@
 // Email Adapter
 // Handles email sending for RFP distribution and notifications
-// For production, integrate with Mailgun, SendGrid, or AWS SES
+// Uses Nodemailer with Gmail, Ethereal, or SMTP backend
 
 import logger from '../utils/logger.js';
+import {
+  sendRfpEmail,
+  sendProposalReceivedEmail,
+  sendProposalDecisionEmail,
+  verifyEmailService
+} from '../utils/email.js';
 
 /**
  * Format RFP as plain text email
@@ -119,66 +125,74 @@ Procurement Team
 }
 
 /**
- * Send RFP email to vendor
- * For stub implementation, logs the email. For production, use Mailgun/SES/SendGrid.
+ * Send RFP email to vendor (wrapper around email service)
  */
-async function sendRfpEmail(rfp, vendor, replyToToken) {
-  const replyDomain = process.env.RFP_REPLY_DOMAIN || 'localhost';
-  const emailFrom = process.env.EMAIL_FROM || 'rfp@localhost';
-
-  const { plainText, htmlText, replyTo } = formatRfpEmail(rfp, vendor, replyToToken, replyDomain);
-
-  // Stub implementation: log the email
-  logger.info(`[EMAIL STUB] Sending RFP to ${vendor.contact_email}`);
-  logger.debug(`From: ${emailFrom}`);
-  logger.debug(`To: ${vendor.contact_email}`);
-  logger.debug(`Reply-To: ${replyTo}`);
-  logger.debug(`Subject: RFP: ${rfp.title} — ${rfp._id}`);
-
-  // TODO: Integrate with real provider
-  // Example with Mailgun:
-  // const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN });
-  // const emailData = {
-  //   from: emailFrom,
-  //   to: vendor.contact_email,
-  //   'reply-to': replyTo,
-  //   subject: `RFP: ${rfp.title} — ${rfp._id}`,
-  //   text: plainText,
-  //   html: htmlText
-  // };
-  // return await mg.messages().send(emailData);
-
-  return {
-    success: true,
-    vendor_email: vendor.contact_email,
-    reply_to: replyTo,
-    message_id: `stub-${Date.now()}`
-  };
+async function sendRfpEmailWrapper(rfp, vendor, replyToToken, senderInfo = {}) {
+  try {
+    const result = await sendRfpEmail([vendor], rfp, senderInfo);
+    if (result.failed.length > 0) {
+      throw new Error(result.failed[0].error);
+    }
+    return { 
+      success: true, 
+      messageId: result.sent[0]?.messageId,
+      email: vendor.contact_email 
+    };
+  } catch (error) {
+    logger.error(`Email send failed for ${vendor.contact_email}: ${error.message}`);
+    throw error;
+  }
 }
 
 /**
- * Send multiple RFP emails (batch)
+ * Send multiple RFP emails (batch) using new email service
  */
-async function sendRfpBatch(rfp, vendors, replyToToken) {
-  logger.info(`[EMAIL BATCH START] Sending to ${vendors.length} vendors, RFP: ${rfp._id}, Token: ${replyToToken}`);
-  const results = [];
-  for (const vendor of vendors) {
-    try {
-      logger.debug(`[EMAIL BATCH ITEM] Processing vendor: ${vendor._id}, email: ${vendor.contact_email}`);
-      const result = await sendRfpEmail(rfp, vendor, replyToToken);
-      results.push({ vendor_id: vendor._id, vendor_email: vendor.contact_email, success: true, ...result });
-      logger.debug(`[EMAIL BATCH ITEM OK] Vendor: ${vendor._id}`);
-    } catch (error) {
-      logger.error(`Failed to send RFP to ${vendor.contact_email}: ${error.message}`);
-      results.push({ vendor_id: vendor._id, vendor_email: vendor.contact_email, success: false, error: error.message });
-    }
+async function sendRfpBatch(rfp, vendors, replyToToken, senderInfo = {}) {
+  logger.info(`[EMAIL BATCH START] Sending to ${vendors.length} vendors, RFP: ${rfp._id}`);
+  
+  try {
+    const result = await sendRfpEmail(
+      vendors,
+      rfp,
+      senderInfo.email ? { name: senderInfo.name, email: senderInfo.email } : undefined
+    );
+    
+    logger.info(`[EMAIL BATCH END] Sent: ${result.sent.length}, Failed: ${result.failed.length}`);
+    
+    return [
+      ...result.sent.map(s => ({
+        vendor_id: s.vendorId,
+        vendor_email: s.email,
+        success: true,
+        messageId: s.messageId
+      })),
+      ...result.failed.map(f => ({
+        vendor_id: f.vendorId,
+        vendor_email: f.email,
+        success: false,
+        error: f.error
+      }))
+    ];
+  } catch (error) {
+    logger.error(`[EMAIL BATCH ERROR] ${error.message}`);
+    throw error;
   }
-  logger.info(`[EMAIL BATCH END] Completed, results: ${results.length}`);
-  return results;
+}
+
+/**
+ * Verify email service is working
+ */
+async function verifyEmailServiceWrapper() {
+  return await verifyEmailService();
 }
 
 export default {
   formatRfpEmail,
-  sendRfpEmail,
-  sendRfpBatch
+  sendRfpEmail: sendRfpEmailWrapper,
+  sendRfpBatch,
+  sendProposalReceivedEmail,
+  sendProposalDecisionEmail,
+  verifyEmailService: verifyEmailServiceWrapper
 };
+
+
