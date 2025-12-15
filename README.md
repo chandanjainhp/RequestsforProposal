@@ -749,4 +749,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-**Built with ❤️ using AI-assisted development**
+**Built with ❤️ development**
