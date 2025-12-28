@@ -16,7 +16,7 @@ import logger from './src/utils/logger.js';
 
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', ],
   credentials: true
 }));
 
@@ -26,7 +26,7 @@ app.use(express.json());
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'src', 'uploads');
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-const MONGO = process.env.MONGODB_URI || 'mongodb://localhost:27017/rfp_prototype';
+const MONGO = process.env.MONGODB_URI || 'mongodb://localhost:27017/rfp-management';
 mongoose.connect(MONGO, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => logger.info('Mongo connected'))
   .catch(err => logger.error('Mongo connection error', err));
@@ -57,5 +57,5 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error(`[UNHANDLED REJECTION] ${reason}`);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => logger.info(`API listening on ${PORT}`));

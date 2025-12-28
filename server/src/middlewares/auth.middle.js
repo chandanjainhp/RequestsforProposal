@@ -1,9 +1,8 @@
-
 // Import necessary utilities and dependencies
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.js"; // Import User model
+import User from "../models/User.js"; // Import User model
 
 // JWT Verification Middleware
 // This middleware authenticates users by verifying their JWT tokens
