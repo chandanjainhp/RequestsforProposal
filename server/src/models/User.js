@@ -25,7 +25,6 @@ const UserSchema = new mongoose.Schema({
   company: {
     type: String,
     trim: true,
-    minlength: [3, 'Company name must be at least 3 characters'],
     maxlength: [100, 'Company name must not exceed 100 characters']
   },
   phone: {
@@ -37,6 +36,18 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
+  },
+  is_verified: {
+    type: Boolean,
+    default: false
+  },
+  verification_status: {
+    type: String,
+    enum: ['pending', 'verified', 'failed'],
+    default: 'pending'
+  },
+  verified_at: {
+    type: Date
   },
   refresh_tokens: [{
     tokenId: { type: String, required: true }, // Unique identifier for token rotation

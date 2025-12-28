@@ -1,0 +1,19 @@
+# Normalize text files and force LF for JSON/lock files
+* text=auto
+*.json text eol=lf
+*.lock text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+
+# Ensure JS/TS files are treated as text
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
