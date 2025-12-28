@@ -21,15 +21,9 @@ export function PrimaryButton({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`
-        px-4 py-2 rounded-lg font-medium transition duration-200 cursor-pointer
-        bg-blue-600 text-white
-        hover:bg-blue-700 hover:shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed
-        flex items-center justify-center gap-2
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      className={`btn-primary flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
+      aria-disabled={disabled || loading}
     >
       {loading && <Loader2 size={18} className="animate-spin" />}
       {children}
@@ -50,15 +44,9 @@ export function SecondaryButton({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`
-        px-4 py-2 rounded-lg font-medium transition duration-200 cursor-pointer
-        bg-gray-200 text-gray-900
-        hover:bg-gray-300 hover:shadow-md disabled:bg-gray-100 disabled:cursor-not-allowed
-        flex items-center justify-center gap-2
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      className={`btn-secondary flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
+      aria-disabled={disabled || loading}
     >
       {loading && <Loader2 size={18} className="animate-spin" />}
       {children}
@@ -79,15 +67,9 @@ export function DangerButton({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`
-        px-4 py-2 rounded-lg font-medium transition duration-200 cursor-pointer
-        bg-red-600 text-white
-        hover:bg-red-700 hover:shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed
-        flex items-center justify-center gap-2
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      className={`btn-secondary text-red-600 flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
+      aria-disabled={disabled || loading}
     >
       {loading && <Loader2 size={18} className="animate-spin" />}
       {children}
@@ -108,15 +90,9 @@ export function SuccessButton({
     <button
       onClick={onClick}
       disabled={disabled || loading}
-      className={`
-        px-4 py-2 rounded-lg font-medium transition duration-200 cursor-pointer
-        bg-green-600 text-white
-        hover:bg-green-700 hover:shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed
-        flex items-center justify-center gap-2
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
+      className={`btn-primary text-white bg-green-600 flex items-center justify-center gap-2 ${fullWidth ? 'w-full' : ''} ${className}`}
       {...props}
+      aria-disabled={disabled || loading}
     >
       {loading && <Loader2 size={18} className="animate-spin" />}
       {children}

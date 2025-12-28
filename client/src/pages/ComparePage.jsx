@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { getComparison, getRfpList } from '../api/compare';
 import ScoreChart from '../components/ScoreChart';
-import RfpStepper from '../components/RfpStepper';
+import BidSenseStepper from '../components/BidSenseStepper';
 import Breadcrumb from '../components/Breadcrumb';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import { AlertCircle, ChevronLeft, Trophy } from 'lucide-react';
@@ -70,7 +70,7 @@ export default function ComparePage() {
       ]} />
 
       {/* Workflow Stepper */}
-      <RfpStepper currentStep={4} />
+      <BidSenseStepper currentStep={4} />
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">

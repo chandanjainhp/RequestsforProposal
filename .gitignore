@@ -55,3 +55,4 @@ pids/
 
 # Redis
 dump.rdb
+server/.env

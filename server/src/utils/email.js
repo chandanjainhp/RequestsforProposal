@@ -797,6 +797,166 @@ const templates = {
       </html>
     `,
   }),
+
+  passwordReset: (userName, resetToken, resetUrl) => ({
+    subject: 'Password Reset Request - RFP Management System',
+    html: `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.6; 
+              color: #333; 
+              background-color: #f5f5f5;
+            }
+            .email-container { 
+              max-width: 650px; 
+              margin: 0 auto; 
+              background-color: white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .header { 
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white; 
+              padding: 30px 20px;
+              text-align: center;
+            }
+            .header h1 { font-size: 28px; margin-bottom: 5px; }
+            .body { padding: 30px 20px; }
+            .info-box {
+              background-color: #fff3cd;
+              border-left: 4px solid #ffc107;
+              padding: 20px;
+              border-radius: 4px;
+              margin: 20px 0;
+            }
+            .info-box strong { color: #ff8c00; }
+            .cta-button {
+              display: inline-block;
+              background-color: #667eea;
+              color: white;
+              padding: 14px 28px;
+              border-radius: 4px;
+              text-decoration: none;
+              margin: 20px 0;
+              font-weight: 600;
+              font-size: 16px;
+            }
+            .cta-button:hover {
+              background-color: #5a67d8;
+            }
+            .footer {
+              background-color: #f5f5f5;
+              padding: 20px;
+              border-top: 1px solid #ddd;
+              font-size: 12px;
+              color: #666;
+              text-align: center;
+            }
+            .token-box {
+              background-color: #f8f9fa;
+              border: 1px solid #dee2e6;
+              border-radius: 4px;
+              padding: 15px;
+              margin: 15px 0;
+              word-break: break-all;
+              font-family: monospace;
+              font-size: 14px;
+            }
+            .warning-box {
+              background-color: #fee2e2;
+              border-left: 4px solid #ef4444;
+              padding: 15px;
+              border-radius: 4px;
+              margin: 20px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <div class="header">
+              <h1>🔐 Password Reset Request</h1>
+              <p>RFP Management System</p>
+            </div>
+
+            <div class="body">
+              <p>Hello <strong>${userName}</strong>,</p>
+
+              <p style="margin-top: 15px;">
+                We received a request to reset your password for your RFP Management System account.
+                If you didn't make this request, you can safely ignore this email.
+              </p>
+
+              <div class="info-box">
+                <strong>⏰ This link will expire in 30 minutes</strong>
+                <p style="margin-top: 8px;">For security reasons, password reset links are only valid for 30 minutes.</p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" class="cta-button">Reset Password</a>
+              </div>
+
+              <p style="margin-top: 20px;">Or copy and paste this link into your browser:</p>
+              <div class="token-box">${resetUrl}</div>
+
+              <div class="warning-box">
+                <strong>⚠️ Security Notice</strong>
+                <p style="margin-top: 8px;">
+                  If you didn't request a password reset, please ignore this email. 
+                  Your password will remain unchanged. For security, never share this link with anyone.
+                </p>
+              </div>
+
+              <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                This is an automated message from RFP Management System. Please do not reply to this email.
+              </p>
+            </div>
+
+            <div class="footer">
+              <p>This is an automated message from RFP Management System</p>
+              <p style="margin-top: 10px; opacity: 0.7;">
+                © 2025 RFP Management System. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  }),
+};
+
+/**
+ * Send password reset email
+ */
+export const sendPasswordResetEmail = async (user, resetToken) => {
+  try {
+    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+    
+    const templateData = templates.passwordReset(
+      user.name,
+      resetToken,
+      resetUrl
+    );
+
+    const mailOptions = {
+      from: `"RFP Management System" <${process.env.SENDER_EMAIL || process.env.GMAIL_USER || 'noreply@rfp-system.com'}>`,
+      to: user.email,
+      subject: templateData.subject,
+      html: templateData.html,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    logger.info(`Password reset email sent to ${user.email}`, { messageId: info.messageId });
+    return { status: 'sent', messageId: info.messageId };
+  } catch (error) {
+    logger.error(`Failed to send password reset email to ${user.email}`, { error: error.message });
+    throw error;
+  }
 };
 
 /**
@@ -929,5 +1089,6 @@ export default {
   sendRfpEmail,
   sendProposalReceivedEmail,
   sendProposalDecisionEmail,
+  sendPasswordResetEmail,
   verifyEmailService,
 };

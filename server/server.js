@@ -10,6 +10,8 @@ import rfpsRouter from './src/routes/rfps.router.js';
 import comparisonRouter from './src/routes/comparison.router.js';
 import vendorRouter from './src/routes/vendor.router.js';
 import healthRouter from './src/routes/health.router.js';
+import authRoutes from './src/routes/authRoutes.js';
+import { errorHandler, notFoundHandler } from './src/middlewares/errorHandler.js';
 import logger from './src/utils/logger.js';
 
 const app = express();
@@ -18,23 +20,8 @@ app.use(cors({
   credentials: true
 }));
 
-// JSON parser with error handling
+// JSON parser (errors handled by global error handler)
 app.use(express.json());
-
-// Error handler for JSON parsing errors
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    logger.error(`[JSON PARSE ERROR] ${err.message}`);
-    logger.error(`[JSON PARSE ERROR] URL: ${req.method} ${req.url}`);
-    logger.error(`[JSON PARSE ERROR] Content-Type: ${req.headers['content-type']}`);
-    return res.status(400).json({ 
-      ok: false, 
-      error: 'Invalid JSON in request body',
-      details: err.message 
-    });
-  }
-  next(err);
-});
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), 'src', 'uploads');
 app.use('/uploads', express.static(UPLOAD_DIR));
@@ -49,9 +36,16 @@ app.use('/api/rfp', rfpRouter);
 app.use('/api/rfps', rfpsRouter);
 app.use('/api', comparisonRouter);
 app.use('/api/vendors', vendorRouter);
+app.use('/api/auth', authRoutes);
 app.use('/health', healthRouter);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
+
+// 404 handler (must be before error handler)
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 // Global error handler
 process.on('uncaughtException', (err) => {
