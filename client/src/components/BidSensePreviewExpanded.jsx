@@ -128,7 +128,7 @@ const InfoRow = ({ label, value }) => {
   );
 };
 
-export default function RfpPreviewExpanded({ rfp, onEdit, editLoading, onFieldChange }) {
+export default function BidSensePreviewExpanded({ rfp, onEdit, editLoading, onFieldChange }) {
   const [expandedSections, setExpandedSections] = useState({
     overview: true,
     budget: true,

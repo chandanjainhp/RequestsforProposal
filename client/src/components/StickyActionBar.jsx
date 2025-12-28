@@ -19,7 +19,7 @@ export default function StickyActionBar({
   if (!showActions) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 sm:pl-55 lg:pl-64">
       <div className="max-w-full px-6 py-4 flex gap-3 justify-center lg:justify-start">
         <div className="flex-1 max-w-sm">
           <PrimaryButton

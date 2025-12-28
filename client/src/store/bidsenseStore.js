@@ -2,12 +2,12 @@ import { create } from 'zustand';
 
 // LocalStorage keys
 const STORAGE_KEYS = {
-  PARSED_RFP: 'rfp_parsed_rfp',
-  CHAT_MESSAGES: 'rfp_chat_messages',
-  CURRENT_RFP: 'rfp_current_rfp',
-  DRAFTS: 'rfp_drafts',
-  LAST_SAVED: 'rfp_last_saved',
-  DRAFT_ID: 'rfp_current_draft_id',
+  PARSED_BIDSENSE: 'bidsense_parsed_bidsense',
+  CHAT_MESSAGES: 'bidsense_chat_messages',
+  CURRENT_BIDSENSE: 'bidsense_current_bidsense',
+  DRAFTS: 'bidsense_drafts',
+  LAST_SAVED: 'bidsense_last_saved',
+  DRAFT_ID: 'bidsense_current_draft_id',
 };
 
 // Helper functions for localStorage
@@ -37,27 +37,17 @@ const removeFromLocalStorage = (key) => {
   }
 };
 
-export const useRfpStore = create((set, get) => {
+export const useBidSenseStore = create((set, get) => {
   // Load initial state from localStorage
-  const initialParsedRfp = getFromLocalStorage(STORAGE_KEYS.PARSED_RFP, null);
-  
-  // Debug log
-  if (initialParsedRfp) {
-    console.log('🔄 Store initialized with saved RFP:', {
-      title: initialParsedRfp.title,
-      budget: initialParsedRfp.budget,
-      delivery_days: initialParsedRfp.delivery_days,
-      items: initialParsedRfp.line_items?.length || 0,
-    });
-  }
+  const initialParsedBidSense = getFromLocalStorage(STORAGE_KEYS.PARSED_BIDSENSE, null);
 
   return {
-    // RFP State
-    currentRfp: getFromLocalStorage(STORAGE_KEYS.CURRENT_RFP, null),
-    parsedRfp: initialParsedRfp,
-    rfpList: [],
-    rfpLoading: false,
-    rfpError: null,
+    // BidSense State
+    currentBidSense: getFromLocalStorage(STORAGE_KEYS.CURRENT_BIDSENSE, null),
+    parsedBidSense: initialParsedBidSense,
+    bidsenseList: [],
+    bidsenseLoading: false,
+    bidsenseError: null,
 
     // Proposal State
     proposals: [],
@@ -88,20 +78,20 @@ export const useRfpStore = create((set, get) => {
     drafts: getFromLocalStorage(STORAGE_KEYS.DRAFTS, []),
     currentDraftId: getFromLocalStorage(STORAGE_KEYS.DRAFT_ID, null),
 
-    // RFP Actions
-    setCurrentRfp: (rfp) => {
-      saveToLocalStorage(STORAGE_KEYS.CURRENT_RFP, rfp);
-      set({ currentRfp: rfp });
+    // BidSense Actions
+    setCurrentBidSense: (bidsense) => {
+      saveToLocalStorage(STORAGE_KEYS.CURRENT_BIDSENSE, bidsense);
+      set({ currentBidSense: bidsense });
     },
-    setParsedRfp: (rfp) => {
-      saveToLocalStorage(STORAGE_KEYS.PARSED_RFP, rfp);
-      set({ parsedRfp: rfp, isDirty: true });
+    setParsedBidSense: (bidsense) => {
+      saveToLocalStorage(STORAGE_KEYS.PARSED_BIDSENSE, bidsense);
+      set({ parsedBidSense: bidsense, isDirty: true });
       // Debounce auto-save
       setTimeout(() => get().autoSaveDraft(), 2000);
     },
-    setRfpList: (rfps) => set({ rfpList: rfps }),
-    setRfpLoading: (loading) => set({ rfpLoading: loading }),
-    setRfpError: (error) => set({ rfpError: error }),
+    setBidSenseList: (bidsenses) => set({ bidsenseList: bidsenses }),
+    setBidSenseLoading: (loading) => set({ bidsenseLoading: loading }),
+    setBidSenseError: (error) => set({ bidsenseError: error }),
 
     // Proposal Actions
     setProposals: (proposals) => set({ proposals }),
@@ -148,7 +138,7 @@ export const useRfpStore = create((set, get) => {
     // Auto-save functionality
     autoSaveDraft: async () => {
       const state = get();
-      if (!state.parsedRfp && state.chatMessages.length === 0) return;
+      if (!state.parsedBidSense && state.chatMessages.length === 0) return;
 
       set({ saveStatus: 'saving' });
 
@@ -156,13 +146,13 @@ export const useRfpStore = create((set, get) => {
         // Create draft object
         const draft = {
           id: state.currentDraftId || `draft_${Date.now()}`,
-          title: state.parsedRfp?.title || 'Untitled RFP',
+          title: state.parsedBidSense?.title || 'Untitled BidSense',
           status: 'draft',
           createdAt: state.lastSavedAt || new Date().toISOString(),
           lastSavedAt: new Date().toISOString(),
           currentStep: 1,
           chatHistory: state.chatMessages,
-          rfpData: state.parsedRfp,
+          bidsenseData: state.parsedBidSense,
           uiState: {
             expandedSections: [],
             scrollPosition: 0
@@ -196,7 +186,7 @@ export const useRfpStore = create((set, get) => {
 
       set({
         currentDraftId: draft.id,
-        parsedRfp: draft.rfpData,
+        parsedBidSense: draft.bidsenseData,
         chatMessages: draft.chatHistory || [],
         lastSavedAt: draft.lastSavedAt,
         saveStatus: 'saved',
@@ -227,7 +217,7 @@ export const useRfpStore = create((set, get) => {
       saveToLocalStorage(STORAGE_KEYS.DRAFT_ID, newDraftId);
       set({
         currentDraftId: newDraftId,
-        parsedRfp: null,
+        parsedBidSense: null,
         chatMessages: [],
         lastSavedAt: null,
         saveStatus: 'saved',
@@ -237,15 +227,15 @@ export const useRfpStore = create((set, get) => {
 
     // Reset Store
     reset: () => {
-      removeFromLocalStorage(STORAGE_KEYS.PARSED_RFP);
+      removeFromLocalStorage(STORAGE_KEYS.PARSED_BIDSENSE);
       removeFromLocalStorage(STORAGE_KEYS.CHAT_MESSAGES);
-      removeFromLocalStorage(STORAGE_KEYS.CURRENT_RFP);
+      removeFromLocalStorage(STORAGE_KEYS.CURRENT_BIDSENSE);
       removeFromLocalStorage(STORAGE_KEYS.LAST_SAVED);
       removeFromLocalStorage(STORAGE_KEYS.DRAFT_ID);
       set({
-        currentRfp: null,
-        parsedRfp: null,
-        rfpList: [],
+        currentBidSense: null,
+        parsedBidSense: null,
+        bidsenseList: [],
         proposals: [],
         selectedVendors: [],
         comparisonData: null,

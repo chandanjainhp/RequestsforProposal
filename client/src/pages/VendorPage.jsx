@@ -315,7 +315,7 @@ export default function VendorPage() {
             <button
               onClick={() => setShowForm(true)}
               disabled={loading}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition flex items-center gap-2 font-medium"
+              className="btn-primary flex items-center gap-2 font-medium"
             >
               <Plus size={20} />
               Add Vendor
@@ -420,7 +420,7 @@ export default function VendorPage() {
               {selectedVendors.size} vendor{selectedVendors.size > 1 ? 's' : ''} selected
             </span>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <button className="btn-primary">
                 Export
               </button>
               <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
@@ -724,7 +724,7 @@ export default function VendorPage() {
                         <div className="flex gap-2 pt-2">
                           <button
                             onClick={() => handleEdit(vendor)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                            className="btn-primary text-sm"
                           >
                             Edit Details
                           </button>
@@ -751,7 +751,7 @@ export default function VendorPage() {
             </p>
             <button
               onClick={() => setShowForm(true)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              className="btn-primary font-medium"
             >
               Add Your First Vendor
             </button>
@@ -769,7 +769,7 @@ export default function VendorPage() {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setSearchQuery('')}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
+                className="btn-secondary text-sm"
               >
                 Clear Search
               </button>
@@ -779,7 +779,7 @@ export default function VendorPage() {
                   setRatingFilter('all');
                   setStatusFilter('all');
                 }}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                className="btn-primary text-sm"
               >
                 Reset Filters
               </button>

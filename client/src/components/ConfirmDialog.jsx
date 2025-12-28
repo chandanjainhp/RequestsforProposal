@@ -13,22 +13,22 @@ export default function ConfirmDialog() {
     switch (type) {
       case 'danger':
         return {
-          icon: <Trash2 className="w-6 h-6 text-red-500" />,
+          icon: <Trash2 className="w-6 h-6 text-red-600" />,
           iconBg: 'bg-red-100',
-          confirmBtn: 'bg-red-600 hover:bg-red-700 text-white',
+          confirmBtn: 'btn-secondary text-red-600 border-red-300',
         };
       case 'warning':
         return {
-          icon: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
+          icon: <AlertTriangle className="w-6 h-6 text-yellow-600" />,
           iconBg: 'bg-yellow-100',
-          confirmBtn: 'bg-yellow-600 hover:bg-yellow-700 text-white',
+          confirmBtn: 'btn-secondary text-yellow-700',
         };
       case 'info':
       default:
         return {
-          icon: <Info className="w-6 h-6 text-blue-500" />,
-          iconBg: 'bg-blue-100',
-          confirmBtn: 'bg-blue-600 hover:bg-blue-700 text-white',
+          icon: <Info className="w-6 h-6 text-primary" />,
+          iconBg: 'bg-blue-50',
+          confirmBtn: 'btn-primary',
         };
     }
   };

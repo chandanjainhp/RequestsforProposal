@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, ChevronDown, Plus } from 'lucide-react';
 import HistoryCard from '../components/HistoryCard';
 import Breadcrumb from '../components/Breadcrumb';
-import { getRfps } from '../api/rfp';
+import { getBidSenses } from '../api/bidsense';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -24,10 +24,10 @@ export default function HistoryPage() {
     const loadHistory = async () => {
       try {
         setLoading(true);
-        const response = await getRfps();
+        const response = await getBidSenses();
 
-        // Transform RFP data to history format
-        const rfps = response.rfps || response.data || response || [];
+        // Transform BidSense/BidRFP data to history format
+        const rfps = response.bidsenses || response.bidSenses || response.rfps || response.data || response || [];
         const historyData = rfps.map(rfp => ({
           id: rfp._id,
           rfpId: rfp._id,
@@ -149,7 +149,7 @@ export default function HistoryPage() {
           <h1 className="text-2xl font-bold text-gray-900">Chat History</h1>
           <button
             onClick={handleStartNew}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="btn-primary flex items-center gap-2"
           >
             <Plus size={20} />
             New RFP

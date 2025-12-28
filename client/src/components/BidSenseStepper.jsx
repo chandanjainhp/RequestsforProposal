@@ -7,7 +7,7 @@
 
 import { CheckCircle2, Circle } from 'lucide-react';
 
-export default function RfpStepper({ currentStep = 1 }) {
+export default function BidSenseStepper({ currentStep = 1 }) {
   const steps = [
     { number: 1, label: 'Create', path: '/chat' },
     { number: 2, label: 'Review', path: '/editor' },

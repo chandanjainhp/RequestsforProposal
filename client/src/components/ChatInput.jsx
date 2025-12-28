@@ -29,7 +29,7 @@ export default function ChatInput({ onSend, loading = false, placeholder = "Type
       <button
         type="submit"
         disabled={loading || !message.trim()}
-        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition flex items-center gap-2"
+        className="btn-primary flex items-center gap-2"
       >
         <Send size={20} />
         <span className="hidden sm:inline">Send</span>

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getRfps, sendRfp } from '../api/rfp';
+import { getBidSenses, sendRfp } from '../api/bidsense';
 import { getVendors } from '../api/vendors';
-import RfpStepper from '../components/RfpStepper';
+import BidSenseStepper from '../components/BidSenseStepper';
 import Breadcrumb from '../components/Breadcrumb';
 import { useNotificationStore } from '../store/notificationStore';
 import { AlertCircle, CheckCircle, ChevronLeft, Send, Search, Filter, Calendar, Mail } from 'lucide-react';
@@ -57,7 +57,7 @@ export default function SendRfpPage() {
       addLoading('Loading RFPs and vendors...');
       
       // Load RFPs
-      const rfpsData = await getRfps();
+      const rfpsData = await getBidSenses();
       const rfps = rfpsData.rfps || [];
       console.log('📋 RFPs loaded:', rfps.length);
       setRfpList(rfps);
@@ -275,7 +275,7 @@ export default function SendRfpPage() {
         { label: 'Create RFP', href: '/chat' },
         { label: 'Send RFP', href: null }
       ]} />
-      <RfpStepper currentStep={3} />
+      <BidSenseStepper currentStep={3} />
 
       {/* Main Content with Sticky Summary */}
       <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
@@ -293,7 +293,7 @@ export default function SendRfpPage() {
           {/* SECTION 1: SELECT RFP */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs">1</span>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-warm-off-white font-bold text-xs">1</span>
               <h2 className="text-lg lg:text-xl font-bold text-gray-900">Select an RFP</h2>
             </div>
             <div className="border-t border-gray-300 mb-4"></div>
@@ -373,7 +373,7 @@ export default function SendRfpPage() {
           {selectedRfp && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs">2</span>
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-warm-off-white font-bold text-xs">2</span>
                 <h2 className="text-lg lg:text-xl font-bold text-gray-900">Select Vendors</h2>
               </div>
               <div className="border-t border-gray-300 mb-3"></div>
@@ -513,7 +513,7 @@ export default function SendRfpPage() {
           {selectedRfp && selectedVendors.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs">3</span>
+                <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-warm-off-white font-bold text-xs">3</span>
                 <h2 className="text-lg lg:text-xl font-bold text-gray-900">Email Settings</h2>
               </div>
               <div className="border-t border-gray-300 mb-4"></div>
@@ -620,7 +620,7 @@ export default function SendRfpPage() {
                 disabled={sendingRfp}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded transition font-medium text-sm ${
                   !sendingRfp
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'btn-primary'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >

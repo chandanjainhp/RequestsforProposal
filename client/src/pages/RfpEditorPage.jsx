@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { updateRfp, getRfp } from '../api/rfp';
-import { useRfpStore } from '../store/rfpStore';
+import { useBidSenseStore } from '../store/bidsenseStore';
 import { PrimaryButton, SecondaryButton } from '../components/Button';
 import Breadcrumb from '../components/Breadcrumb';
 import SaveStatusIndicator from '../components/SaveStatusIndicator';
 import { ChevronDown, ChevronRight, AlertCircle, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
+import api from '../api/axiosConfig';
+
+// API functions
+const getRfp = async (id) => {
+  const response = await api.get(`/api/bidsense/${id}`);
+  return response.data;
+};
+
+const updateRfp = async (id, data) => {
+  const response = await api.put(`/api/bidsense/${id}`, data);
+  return response.data;
+};
 
 // Helper component for collapsible sections
 const CollapsibleSection = ({ title, status, expanded, onToggle, children, fullWidth = true }) => {
@@ -13,16 +24,16 @@ const CollapsibleSection = ({ title, status, expanded, onToggle, children, fullW
     <div className={`border border-gray-200 rounded-lg overflow-hidden ${fullWidth ? 'w-full' : ''}`}>
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-4 bg-warm-off-white hover:bg-soft-gray transition-colors"
       >
         <div className="flex items-center gap-3">
           {expanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-          <span className="font-semibold text-gray-900">{title}</span>
+          <span className="font-semibold text-charcoal">{title}</span>
           {status && <span className="text-sm text-gray-500 ml-2">{status}</span>}
         </div>
       </button>
       {expanded && (
-        <div className="p-6 bg-white space-y-6">
+        <div className="p-6 bg-warm-off-white space-y-6">
           {children}
         </div>
       )}
@@ -65,7 +76,7 @@ const FormField = ({ label, value, onChange, placeholder, required, type = 'text
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-gray-900">
+        <label className="text-sm font-medium text-charcoal">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -98,7 +109,7 @@ const FormField = ({ label, value, onChange, placeholder, required, type = 'text
 // Confidence Alert Component
 const ConfidenceAlert = ({ confidence, message }) => {
   let alertConfig = {
-    bgColor: 'bg-gray-50',
+    bgColor: 'bg-warm-off-white',
     borderColor: 'border-gray-300',
     textColor: 'text-gray-700',
     icon: null,
@@ -189,8 +200,9 @@ export default function RfpEditorPage() {
   });
 
   const [newLineItem, setNewLineItem] = useState('');
+  const [bidsenseId] = useState(null);
   const [rfpId, setRfpId] = useState(null);
-  const { parsedRfp, currentRfp, setParsedRfp } = useRfpStore();
+  const { parsedBidSense, currentBidSense, setParsedBidSense } = useBidSenseStore();
   const autoSaveTimeoutRef = useRef(null);
 
   // Auto-save function with debounce
@@ -220,7 +232,7 @@ export default function RfpEditorPage() {
     const parsedData = location.state?.parsedData;
     
     if (!id || id === 'undefined') {
-      const data = parsedData || parsedRfp || currentRfp;
+      const data = parsedData || parsedBidSense || currentBidSense;
       if (data) {
         setFormData({
           title: data.title || '',
@@ -280,7 +292,7 @@ export default function RfpEditorPage() {
       [field]: value,
     };
     setFormData(updatedData);
-    setParsedRfp({ ...updatedData, _id: rfpId });
+    setParsedBidSense({ ...updatedData, _id: bidsenseId });
     
     // Auto-save after user stops typing
     autoSaveRfp(updatedData);
@@ -295,7 +307,7 @@ export default function RfpEditorPage() {
       };
       setFormData(updatedData);
       setNewLineItem('');
-      setParsedRfp({ ...updatedData, _id: rfpId });
+      setParsedBidSense({ ...updatedData, _id: bidsenseId });
       autoSaveRfp(updatedData);
     }
   };
@@ -307,7 +319,7 @@ export default function RfpEditorPage() {
       line_items: updatedItems,
     };
     setFormData(updatedData);
-    setParsedRfp({ ...updatedData, _id: rfpId });
+    setParsedBidSense({ ...updatedData, _id: bidsenseId });
     autoSaveRfp(updatedData);
   };
 
@@ -348,7 +360,7 @@ export default function RfpEditorPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-x-hidden">
+    <div className="flex flex-col h-screen bg-warm-off-white overflow-x-hidden">
       {/* Breadcrumb */}
       <Breadcrumb items={[
         { label: 'Create RFP', href: '/chat' },
@@ -363,7 +375,7 @@ export default function RfpEditorPage() {
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-gray-900">{formData.title || 'Untitled RFP'}</h1>
+                <h1 className="text-4xl font-bold text-charcoal">{formData.title || 'Untitled RFP'}</h1>
                 <p className="text-sm text-gray-500 mt-2">Created just now</p>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -464,7 +476,7 @@ export default function RfpEditorPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900 block mb-3">Payment Terms *</label>
+                <label className="text-sm font-medium text-charcoal block mb-3">Payment Terms *</label>
                 <input
                   type="text"
                   value={formData.payment_terms}
@@ -511,17 +523,17 @@ export default function RfpEditorPage() {
                 {formData.line_items.map((item, index) => (
                   <div
                     key={index}
-                    className="p-4 bg-white rounded border border-gray-300 hover:border-blue-400 transition-colors flex items-start gap-3"
+                    className="p-4 bg-white rounded border border-soft-gray hover:border-muted-blue transition-colors flex items-start gap-3"
                   >
                     <div className="shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                       <span className="text-sm font-semibold text-blue-700">{index + 1}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-base word-wrap">
+                      <p className="font-semibold text-charcoal text-base word-wrap">
                         {typeof item === 'object' ? `${item.quantity || ''}x ${item.name || 'Item'}` : item}
                       </p>
                       {typeof item === 'object' && item.specs && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-muted-blue mt-1">
                           {typeof item.specs === 'string' ? item.specs : Object.entries(item.specs).map(([key, val]) => `${key}: ${val}`).join(', ')}
                         </p>
                       )}
@@ -551,7 +563,7 @@ export default function RfpEditorPage() {
           >
             <div className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-gray-900 block mb-3">Delivery Timeline *</label>
+                <label className="text-sm font-medium text-charcoal block mb-3">Delivery Timeline *</label>
                 <input
                   type="text"
                   value={formData.delivery_days ? `Within ${Math.ceil(formData.delivery_days / 7)} weeks` : ''}
@@ -634,11 +646,11 @@ export default function RfpEditorPage() {
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-soft-gray shadow-lg sm:pl-55 lg:pl-64">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <button
             onClick={() => navigate('/chat')}
-            className="text-gray-600 hover:text-gray-900 hover:underline transition-colors flex items-center gap-1"
+            className="text-muted-blue hover:text-charcoal hover:underline transition-colors flex items-center gap-1"
           >
             ← Back to Chat
           </button>

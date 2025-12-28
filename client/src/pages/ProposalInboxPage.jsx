@@ -151,7 +151,7 @@ export default function ProposalInboxPage() {
             </div>
             <button
               onClick={() => navigate('/chat')}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 font-medium"
+              className="btn-primary flex items-center gap-2 font-medium"
             >
               <Plus size={20} />
               New RFP
@@ -366,7 +366,7 @@ export default function ProposalInboxPage() {
             </p>
             <button
               onClick={() => navigate('/chat')}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+              className="btn-primary font-medium"
             >
               Create RFP
             </button>
