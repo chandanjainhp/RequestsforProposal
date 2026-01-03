@@ -39,7 +39,7 @@ export default function ComparePage() {
         setRfpList([]); // Clear RFP list when we have comparison data
       } catch (err) {
         console.error('Error loading comparison:', err);
-        setError(err.response?.data?.message || 'Failed to load comparison');
+        setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to load comparison');
         setComparisonData(null);
       } finally {
         setLoading(false);

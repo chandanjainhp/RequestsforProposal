@@ -40,7 +40,7 @@ export default function ProposalInboxPage() {
         setRfpList([]); // Clear RFP list when we have proposals
       } catch (err) {
         console.error('Error loading proposals:', err);
-        setError(err.response?.data?.message || 'Failed to load proposals');
+        setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to load proposals');
         setProposals([]);
       } finally {
         setLoading(false);

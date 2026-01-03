@@ -353,7 +353,7 @@ export default function RfpEditorPage() {
         navigate(`/send/${rfpId}`);
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save RFP');
+      setError(err.response?.data?.message || err.message || 'Failed to save RFP');
     } finally {
       setLoading(false);
     }

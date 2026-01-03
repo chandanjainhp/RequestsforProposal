@@ -82,7 +82,7 @@ export default function SendRfpPage() {
       addSuccess(`✓ Loaded ${rfps.length} RFPs and ${vendorsList.length} vendors`);
     } catch (err) {
       console.error('Failed to load data:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to load data';
+      const errorMsg = err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to load data';
       setError(errorMsg);
       addError(errorMsg, {
         actionButton: 'Retry',
@@ -233,7 +233,7 @@ export default function SendRfpPage() {
 
     } catch (err) {
       console.error('Error sending RFP:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to send RFP';
+      const errorMsg = err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to send RFP';
       setError(errorMsg);
       addError(errorMsg, {
         actionButton: 'Retry',

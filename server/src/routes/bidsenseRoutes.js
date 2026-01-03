@@ -1,17 +1,22 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   getBidSenseById,
   createBidSense,
   updateBidSense,
-  deleteBidSense
-} = require('../controllers/bidsenseController');
-const { authMiddleware } = require('../middlewares/authMiddleware');
-const { validate } = require('../middlewares/validate');
-const { body } = require('express-validator');
+  deleteBidSense,
+  parseRfp
+} from '../controllers/bidsense.Controller.js';
+import { authenticate } from '../middlewares/authMiddleware.js';
+import validate from '../middlewares/validate.js';
+import { body } from 'express-validator';
 
-// Apply auth middleware to all routes
-router.use(authMiddleware);
+const router = express.Router();
+
+// Parse endpoint (no auth required for parsing)
+router.post('/parse', parseRfp);
+
+// Apply auth middleware to all other routes
+router.use(authenticate);
 
 // Validation rules
 const bidSenseValidation = [
@@ -43,4 +48,4 @@ router.put('/:id', bidSenseValidation, validate, updateBidSense);
 // DELETE /api/bidsense/:id - Delete BidSense
 router.delete('/:id', deleteBidSense);
 
-module.exports = router;
+export default router;

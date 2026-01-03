@@ -7,6 +7,7 @@ import path from 'path';
 import emailInbound from './src/routes/emailInbound.js';
 import rfpRouter from './src/routes/rfp.router.js';
 import rfpsRouter from './src/routes/rfps.router.js';
+import bidsenseRouter from './src/routes/bidsenseRoutes.js';
 import comparisonRouter from './src/routes/comparison.router.js';
 import vendorRouter from './src/routes/vendor.router.js';
 import healthRouter from './src/routes/health.router.js';
@@ -34,6 +35,7 @@ mongoose.connect(MONGO, { useNewUrlParser: true, useUnifiedTopology: true })
 app.use('/api/email', emailInbound);
 app.use('/api/rfp', rfpRouter);
 app.use('/api/rfps', rfpsRouter);
+app.use('/api/bidsense', bidsenseRouter);
 app.use('/api', comparisonRouter);
 app.use('/api/vendors', vendorRouter);
 app.use('/api/auth', authRoutes);

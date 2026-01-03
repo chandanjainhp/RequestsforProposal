@@ -129,7 +129,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       console.error('Parse error:', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to parse RFP. Please try again.');
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to parse RFP. Please try again.');
       addMessage({
         text: 'Sorry, I encountered an error while parsing. Please try again.',
         isUser: false,
@@ -165,7 +165,7 @@ export default function ChatPage() {
       setTimeout(() => navigate(`/editor/${bidsenseId}`), 1500);
     } catch (err) {
       console.error('Save RFP error:', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to save RFP');
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to save RFP');
     } finally {
       setSavingBidSense(false);
     }
@@ -257,7 +257,7 @@ export default function ChatPage() {
       navigate(`/editor/${bidsenseId}`);
     } catch (err) {
       console.error('Edit RFP error:', err);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to save RFP');
+      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to save RFP');
       setSavingBidSense(false);
     }
   };
