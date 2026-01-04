@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import PublicLayout from '../layouts/PublicLayout';
+import PublicLayout from '../layout/PublicLayout';
 
 /**
  * 404 Not Found Error Page

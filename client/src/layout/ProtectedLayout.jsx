@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import Sidebar from '../layout/Sidebar';
-import Header from '../layout/Header';
+import Sidebar from './Sidebar';
+import Header from './Header';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Toast from '../components/Toast';
 

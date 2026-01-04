@@ -3,9 +3,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 // Layouts
-import PublicLayout from '../layouts/PublicLayout';
-import ProtectedLayout from '../layouts/ProtectedLayout';
-import AuthLayout from '../layouts/AuthLayout';
+import PublicLayout from '../layout/PublicLayout';
+import ProtectedLayout from '../layout/ProtectedLayout';
+import AuthLayout from '../layout/AuthLayout';
 
 // Pages
 import HomePage from '../pages/homePage';

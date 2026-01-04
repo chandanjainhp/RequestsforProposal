@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import PublicLayout from '../layouts/PublicLayout';
+import PublicLayout from '../layout/PublicLayout';
 
 /**
  * 500 Server Error Page

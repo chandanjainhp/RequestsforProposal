@@ -1,151 +1,197 @@
-import { useState, useEffect, useCallback, useRef, memo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, MessageCircle, FileText, Mail, BarChart3, Users } from 'lucide-react';
+import { useState, memo } from 'react';
+import { Link } from 'react-router-dom';
+import { Bell, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import { ROUTES } from '../constants/routes';
 
-// Move navItems outside component to prevent recreation on every render
-const NAV_ITEMS = [
-  { path: ROUTES.CHAT, label: 'Chat', icon: MessageCircle },
-  { path: ROUTES.EDITOR, label: 'Editor', icon: FileText },
-  { path: ROUTES.PROPOSALS, label: 'Proposals', icon: Mail },
-  { path: ROUTES.COMPARE, label: 'Compare', icon: BarChart3 },
-  { path: ROUTES.VENDORS, label: 'Vendors', icon: Users },
-];
+// Memoized Logo Component - Identity lives in header
+const Logo = memo(() => (
+  <Link 
+    to={ROUTES.DASHBOARD}
+    className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-shrink-0"
+    title="Go to Dashboard"
+  >
+    <div className="bg-[#4A4A4A] text-[#FFFFE3] rounded-lg p-2 font-bold text-sm flex items-center justify-center w-9 h-9">
+      BS
+    </div>
+    <span className="font-bold text-[#4A4A4A] text-base hidden sm:inline-block">BidSense</span>
+  </Link>
+));
 
-const Header = memo(() => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const mobileNavRef = useRef(null);
-
-  // Memoize isActive function to prevent recreation on every render
-  const isActive = useCallback(
-    (path) => location.pathname.startsWith(path),
-    [location.pathname]
+// Memoized Notification Badge Component
+const NotificationBadge = memo(({ count }) => {
+  if (!count) return null;
+  return (
+    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      {count > 99 ? '99+' : count}
+    </span>
   );
+});
 
-  // Close mobile menu on Escape key
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && mobileMenuOpen) {
-        setMobileMenuOpen(false);
-      }
-    };
+// Memoized Notifications Panel Component
+const NotificationsPanel = memo(({ isOpen, onClose }) => {
+  if (!isOpen) return null;
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [mobileMenuOpen]);
-
-  // Manage focus when mobile menu opens
-  useEffect(() => {
-    if (mobileMenuOpen && mobileNavRef.current) {
-      const firstLink = mobileNavRef.current.querySelector('a');
-      firstLink?.focus();
-    }
-  }, [mobileMenuOpen]);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileMenuOpen]);
+  const notifications = [
+    { id: 1, title: 'New Proposal', message: 'Vendor submitted a proposal', time: 'Today' },
+    { id: 2, title: 'RFP Updated', message: 'Your RFP has been viewed by 3 vendors', time: 'Today' },
+    { id: 3, title: 'Deadline Approaching', message: 'Vendor response due in 2 days', time: 'Yesterday' },
+  ];
 
   return (
     <>
-      <header className="bg-charcoal text-white shadow-lg border-b-4 border-soft-gray">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          {/* Logo */}
-          <Link
-            to={ROUTES.HOME}
-            className="text-2xl font-bold flex items-center gap-2 hover:opacity-90 transition cursor-pointer group"
-            title="Go to home page"
-          >
-            <div className="bg-white text-charcoal rounded-lg p-2 group-hover:scale-105 transition">
-              BS
-            </div>
-            <span>BidSense</span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-1">
-            {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-              const active = isActive(path);
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  title={`Go to ${label}`}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition duration-200 ${
-                    active
-                      ? 'bg-white text-charcoal font-semibold shadow-md'
-                      : 'text-white hover:bg-muted-blue hover:shadow-md'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-muted-blue rounded-lg transition"
-            aria-label="Main menu"
-            aria-expanded={mobileMenuOpen}
-            aria-controls="mobile-nav"
-            title="Main menu"
-          >
-            {mobileMenuOpen ? (
-              <X size={24} className="hover:scale-110 transition" />
-            ) : (
-              <Menu size={24} className="hover:scale-110 transition" />
-            )}
-          </button>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 z-40"
+        onClick={onClose}
+      />
+      
+      {/* Panel */}
+      <div className="absolute right-0 top-full mt-1 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200 max-h-96 overflow-y-auto">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
         </div>
-      </header>
 
-      {/* Mobile Menu Backdrop */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <nav
-          id="mobile-nav"
-          ref={mobileNavRef}
-          aria-label="Main navigation"
-          className="relative z-50 md:hidden bg-charcoal px-4 py-3 space-y-1 border-t border-soft-gray transform transition-transform duration-300 ease-in-out"
-        >
-          {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-            const active = isActive(path);
-            return (
-              <Link
-                key={path}
-                to={path}
-                className={`px-3 py-2 rounded-lg flex items-center gap-2 transition ${
-                  active
-                    ? 'bg-white text-charcoal font-semibold'
-                    : 'text-white hover:bg-muted-blue'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
+        {/* Notifications List */}
+        {notifications.length > 0 ? (
+          <div className="divide-y divide-gray-200">
+            {notifications.map(notif => (
+              <button
+                key={notif.id}
+                onClick={onClose}
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors"
               >
-                <Icon size={18} />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      )}
+                <p className="text-sm font-medium text-gray-900">{notif.title}</p>
+                <p className="text-xs text-gray-600 mt-0.5">{notif.message}</p>
+                <p className="text-xs text-gray-400 mt-1">{notif.time}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm text-gray-500">No notifications</p>
+          </div>
+        )}
+      </div>
     </>
   );
 });
+
+// Memoized User Menu Component
+const UserMenu = memo(({ isOpen, onToggle, user, onLogout }) => {
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onToggle()}
+        className="flex items-center gap-2 hover:opacity-80 transition"
+        title="User menu"
+      >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6D8196] to-[#4A4A4A] text-white flex items-center justify-center text-xs font-bold">
+          {user?.name?.charAt(0) || 'U'}
+        </div>
+        <ChevronDown size={16} className={`text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => onToggle()}
+          />
+          
+          {/* Menu */}
+          <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl z-50 border border-gray-200 overflow-hidden">
+            {/* User Info */}
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <p className="text-sm font-semibold text-gray-900">{user?.name || 'User'}</p>
+              <p className="text-xs text-gray-600">{user?.email}</p>
+              {user?.role && (
+                <span className={`inline-block mt-2 px-2 py-1 rounded text-xs font-medium ${
+                  user.role === 'admin' 
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {user.role}
+                </span>
+              )}
+            </div>
+
+            {/* Menu Items */}
+            <button
+              onClick={() => onToggle()}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3"
+            >
+              <Settings size={16} />
+              Settings
+            </button>
+
+            {/* Logout */}
+            <button
+              onClick={() => {
+                onToggle();
+                onLogout();
+              }}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-3 border-t border-gray-200"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+});
+
+const Header = memo(() => {
+  const { user, logout } = useAuth();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const unreadCount = 3; // TODO: Replace with real data from useSyncStore
+
+  return (
+    <header className="sticky top-0 z-40 h-16 bg-white border-b border-gray-200 px-4 md:px-6 flex items-center justify-between">
+      {/* LEFT: Logo (Identity) */}
+      <Logo />
+
+      {/* RIGHT: Status & Shortcuts */}
+      <div className="flex items-center gap-4">
+        {/* Notifications */}
+        <div className="relative">
+          <button
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Notifications"
+          >
+            <Bell size={20} className="text-gray-700" />
+            <NotificationBadge count={unreadCount} />
+          </button>
+          <NotificationsPanel 
+            isOpen={notificationsOpen} 
+            onClose={() => setNotificationsOpen(false)} 
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="w-px h-6 bg-gray-300"></div>
+
+        {/* User Menu */}
+        <UserMenu 
+          isOpen={userMenuOpen}
+          onToggle={() => setUserMenuOpen(!userMenuOpen)}
+          user={user}
+          onLogout={logout}
+        />
+      </div>
+    </header>
+  );
+});
+
+Header.displayName = 'Header';
+NotificationsPanel.displayName = 'NotificationsPanel';
+UserMenu.displayName = 'UserMenu';
+NotificationBadge.displayName = 'NotificationBadge';
 
 export default Header;

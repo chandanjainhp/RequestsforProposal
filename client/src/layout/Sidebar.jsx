@@ -11,7 +11,9 @@ import {
   History,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { NetworkStatusIndicator, NotificationBadge } from '../components/NetworkStatus';
@@ -21,224 +23,246 @@ import { ROUTES } from '../constants/routes';
 // CSS class constants for better maintainability
 const linkBaseClass = "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 cursor-pointer group relative";
 const linkActiveClass = "bg-[#FFFFE3] text-[#4A4A4A] font-semibold border-l-4 border-[#6D8196]";
-const linkInactiveClass = "text-[#4A4A4A] hover:bg-[#FFFFE3] hover:bg-opacity-50";
+const linkInactiveClass = "text-[#4A4A4A] hover:bg-[#FFFFE3] hover:bg-opacity-50 opacity-90";
+const sectionLabelClass = "px-3 py-2 text-xs font-bold text-[#6D8196] uppercase tracking-wider";
 
-// Memoized Navigation Items Component
+// Memoized Navigation Items Component - Task-oriented grouping
 const NavigationItems = memo(({
   mobile = false,
   isCollapsed,
-  mainNavItems,
-  adminNavItems = [],
-  bottomNavItems,
+  primaryItems,
+  managementItems,
+  systemItems,
+  adminItems = [],
   isActive
-}) => (
-  <>
-    {/* Main Navigation Items */}
-    <nav className={`${mobile ? 'flex-1 px-3 py-6' : 'flex-1 px-2 py-4'} space-y-0.5 overflow-y-auto`}>
-      {mainNavItems.map(({ path, label, icon: Icon, badge }) => {
-        const active = isActive(path);
-        return (
-          <Link
-            key={path}
-            to={path}
-            title={label}
-            className={`${linkBaseClass} ${
-              active ? linkActiveClass : linkInactiveClass
-            } ${mobile ? 'text-base' : 'text-sm'}`}
-          >
-            <div className="relative flex items-center">
-              <Icon
-                size={mobile ? 20 : 18}
-                className="shrink-0"
-                strokeWidth={active ? 2.5 : 2}
-              />
-              {badge && badge > 0 && mobile && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#6D8196] rounded-full border-2 border-white"></span>
-              )}
-            </div>
-            {(!isCollapsed || mobile) && (
-              <span className="flex-1">{label}</span>
-            )}
-            {(!isCollapsed || mobile) && badge && badge > 0 && (
-              <NotificationBadge count={badge} />
-            )}
-
-            {/* Desktop Tooltip on collapse */}
-            {!mobile && isCollapsed && (
-              <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                {label}
-                {badge && badge > 0 && ` (${badge})`}
-              </div>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
-
-    {/* Admin Navigation Items - only shown if adminNavItems exist */}
-    {adminNavItems.length > 0 && (
-      <>
-        <div className="border-t border-[#CBCBCB] mx-2 my-2"></div>
-        <nav className={`${mobile ? 'px-3' : 'px-2'} space-y-0.5`}>
-          {(!isCollapsed || mobile) && (
-            <div className="px-3 py-1 text-xs font-semibold text-[#6D8196] uppercase tracking-wider">
-              Admin
-            </div>
+}) => {
+  const renderNavItem = (item) => {
+    const { path, label, icon: Icon, badge } = item;
+    const active = isActive(path);
+    
+    return (
+      <Link
+        key={path}
+        to={path}
+        title={label}
+        className={`${linkBaseClass} ${
+          active ? linkActiveClass : linkInactiveClass
+        } ${mobile ? 'text-base' : 'text-sm'}`}
+      >
+        <div className="relative flex items-center">
+          <Icon
+            size={mobile ? 20 : 18}
+            className={`shrink-0 transition-opacity ${active ? 'opacity-100' : 'opacity-70'}`}
+            strokeWidth={active ? 2.5 : 2}
+          />
+          {badge && badge > 0 && mobile && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#6D8196] rounded-full border-2 border-white"></span>
           )}
-          {adminNavItems.map(({ path, label, icon: Icon }) => {
-            const active = isActive(path);
-            return (
-              <Link
-                key={path}
-                to={path}
-                title={label}
-                className={`${linkBaseClass} ${
-                  active ? linkActiveClass : linkInactiveClass
-                } ${mobile ? 'text-base' : 'text-sm'}`}
-              >
-                <Icon
-                  size={mobile ? 20 : 18}
-                  className="shrink-0"
-                  strokeWidth={active ? 2.5 : 2}
-                />
-                {(!isCollapsed || mobile) && (
-                  <span>{label}</span>
-                )}
-                {!mobile && isCollapsed && (
-                  <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                    {label}
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-      </>
-    )}
+        </div>
+        {(!isCollapsed || mobile) && (
+          <span className="flex-1">{label}</span>
+        )}
+        {(!isCollapsed || mobile) && badge && badge > 0 && (
+          <NotificationBadge count={badge} />
+        )}
 
-    {/* Divider */}
-    <div className="border-t border-[#CBCBCB] mx-2"></div>
+        {/* Desktop Tooltip on collapse */}
+        {!mobile && isCollapsed && (
+          <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+            {label}
+            {badge && badge > 0 && ` (${badge})`}
+          </div>
+        )}
+      </Link>
+    );
+  };
 
-    {/* Bottom Navigation Items */}
-    <nav className={`${mobile ? 'px-3 py-4' : 'px-2 py-3'} space-y-0.5`}>
-      {bottomNavItems.map(({ path, label, icon: Icon }) => {
-        const active = isActive(path);
-        return (
-          <Link
-            key={path}
-            to={path}
-            title={label}
-            className={`${linkBaseClass} ${
-              active ? linkActiveClass : linkInactiveClass
-            } ${mobile ? 'text-base' : 'text-sm'}`}
-          >
-            <Icon
-              size={mobile ? 20 : 18}
-              className="shrink-0"
-              strokeWidth={active ? 2.5 : 2}
-            />
+  return (
+    <>
+      {/* Primary Tasks Section */}
+      <nav className={`${mobile ? 'px-3 py-4' : 'px-2 py-3'} space-y-0.5 overflow-y-auto`}>
+        {(!isCollapsed || mobile) && (
+          <div className={sectionLabelClass}>Primary Tasks</div>
+        )}
+        {primaryItems.map(renderNavItem)}
+      </nav>
+
+      {/* Management Section */}
+      {managementItems.length > 0 && (
+        <>
+          <div className={`border-t border-[#CBCBCB] mx-2 my-2`}></div>
+          <nav className={`${mobile ? 'px-3 pb-4' : 'px-2 py-3'} space-y-0.5`}>
             {(!isCollapsed || mobile) && (
-              <span>{label}</span>
+              <div className={sectionLabelClass}>Management</div>
             )}
+            {managementItems.map(renderNavItem)}
+          </nav>
+        </>
+      )}
 
-            {/* Desktop Tooltip on collapse */}
-            {!mobile && isCollapsed && (
-              <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-                {label}
-              </div>
+      {/* Admin Section */}
+      {adminItems.length > 0 && (
+        <>
+          <div className={`border-t border-[#CBCBCB] mx-2 my-2`}></div>
+          <nav className={`${mobile ? 'px-3 pb-4' : 'px-2 py-3'} space-y-0.5`}>
+            {(!isCollapsed || mobile) && (
+              <div className={sectionLabelClass}>Admin</div>
             )}
-          </Link>
-        );
-      })}
-    </nav>
-  </>
-));
+            {adminItems.map(renderNavItem)}
+          </nav>
+        </>
+      )}
 
-// Memoized User Section Component
+      {/* System Section */}
+      <div className={`border-t border-[#CBCBCB] mx-2 my-2`}></div>
+      <nav className={`${mobile ? 'px-3 py-4' : 'px-2 py-3'} space-y-0.5`}>
+        {(!isCollapsed || mobile) && (
+          <div className={sectionLabelClass}>System</div>
+        )}
+        {systemItems.map(renderNavItem)}
+      </nav>
+    </>
+  );
+});
+
+// Memoized User Section Component - Task-oriented with dropdown menu
 const UserSection = memo(({
   mobile = false,
   isCollapsed,
   user,
-  handleLogout
-}) => (
-  <div className={`border-t border-[#CBCBCB] ${mobile ? 'p-4' : 'p-3'} bg-white`}>
-    {/* Network Status */}
-    {(!isCollapsed || mobile) && (
-      <div className="mb-3">
-        <NetworkStatusIndicator className="text-xs" />
-      </div>
-    )}
+  handleLogout,
+  isOnline
+}) => {
+  const [showMenu, setShowMenu] = useState(false);
 
-    {/* User Info Container */}
-    <div className={`flex items-center ${isCollapsed && !mobile ? 'flex-col gap-2' : 'gap-3'}`}>
-      {/* User Avatar and Info */}
-      <div className={`flex items-center gap-3 ${isCollapsed && !mobile ? 'justify-center' : 'flex-1 min-w-0'} group relative`}>
-        <div className="relative">
-          <div className="w-9 h-9 bg-[#6D8196] rounded-full flex items-center justify-center shrink-0">
-            <span className="text-[#FFFFE3] text-xs font-bold">
-              {(user && user.name)
-                ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-                : 'JD'
-              }
-            </span>
-          </div>
-          {/* Online status indicator */}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-        </div>
+  // Get user initials safely
+  const getInitials = () => {
+    if (!user?.name) return 'U';
+    return user.name
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
 
-        {(!isCollapsed || mobile) && (
-          <div className="text-left min-w-0 flex-1">
-            <div className="text-xs font-semibold text-[#4A4A4A] truncate">
-              {user?.name || 'John Doe'}
-            </div>
-            <div className="text-xs text-[#6D8196] truncate">
-              {user?.email || 'user@example.com'}
-            </div>
-          </div>
-        )}
+  // Get user role badge color
+  const getRoleBadgeColor = () => {
+    if (!user?.role) return 'bg-gray-200 text-gray-700';
+    return user.role === 'admin' 
+      ? 'bg-purple-100 text-purple-700' 
+      : 'bg-blue-100 text-blue-700';
+  };
 
-        {/* Tooltip for collapsed state */}
-        {isCollapsed && !mobile && (
-          <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-            <div className="font-semibold">{user?.name || 'John Doe'}</div>
-            <div className="text-[#CBCBCB]">{user?.email || 'user@example.com'}</div>
-          </div>
-        )}
-      </div>
+  const displayName = user?.name || 'User';
+  const displayEmail = user?.email || 'user@example.com';
+  const userRole = user?.role || 'user';
 
-      {/* Logout Button */}
+  const handleMenuLogout = () => {
+    setShowMenu(false);
+    handleLogout();
+  };
+
+  return (
+    <div className={`border-t border-[#CBCBCB] ${mobile ? 'p-4' : 'p-4'} bg-gradient-to-b from-gray-50 to-white`}>
+      {/* Connection Status */}
       {(!isCollapsed || mobile) && (
-        <button
-          onClick={handleLogout}
-          className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
-          title="Logout"
-        >
-          <LogOut size={14} />
-          <span>Logout</span>
-        </button>
+        <div className="mb-3">
+          <NetworkStatusIndicator className="text-xs" />
+        </div>
       )}
 
-      {/* Collapsed Logout Icon Button */}
-      {isCollapsed && !mobile && (
-        <button
-          onClick={handleLogout}
-          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors group relative"
-          title="Logout"
-        >
-          <LogOut size={16} />
-          <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
-            Logout
+      {/* User Card - Clickable dropdown trigger */}
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className={`w-full relative text-left p-3 rounded-lg hover:bg-gray-100 transition-colors ${isCollapsed && !mobile ? 'px-2 py-2' : ''}`}
+      >
+        <div className={`flex items-center gap-3 ${isCollapsed && !mobile ? 'justify-center flex-col' : ''}`}>
+          {/* Avatar with Online Status */}
+          <div className="relative flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#6D8196] to-[#4A4A4A] rounded-full flex items-center justify-center shadow-sm">
+              <span className="text-[#FFFFE3] text-xs font-bold">
+                {getInitials()}
+              </span>
+            </div>
+            {/* Online/Offline Status Indicator */}
+            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
+              isOnline ? 'bg-green-500' : 'bg-gray-400'
+            }`}></div>
           </div>
-        </button>
+
+          {/* User Info - Only show when expanded or on mobile */}
+          {(!isCollapsed || mobile) && (
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-[#4A4A4A] truncate">
+                {displayName}
+              </h3>
+              <p className="text-xs text-[#6D8196] truncate">
+                {displayEmail}
+              </p>
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Dropdown Menu */}
+      {showMenu && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => setShowMenu(false)}
+          />
+          
+          {/* Menu */}
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-[#CBCBCB] rounded-lg shadow-lg z-50 overflow-hidden">
+            {/* User Info in Menu */}
+            <div className="px-4 py-3 border-b border-gray-200">
+              <p className="text-sm font-semibold text-[#4A4A4A]">{displayName}</p>
+              <p className="text-xs text-[#6D8196] mt-0.5">{displayEmail}</p>
+              <div className="mt-2">
+                <span className={`inline-block px-2 py-1 rounded text-xs font-medium capitalize ${getRoleBadgeColor()}`}>
+                  {userRole}
+                </span>
+              </div>
+            </div>
+
+            {/* Menu Items */}
+            <button
+              onClick={() => setShowMenu(false)}
+              className="w-full text-left px-4 py-2.5 text-sm text-[#4A4A4A] hover:bg-gray-50 transition-colors flex items-center gap-3"
+            >
+              <Settings size={16} />
+              Settings
+            </button>
+
+            {/* Logout - neutral color, not red */}
+            <button
+              onClick={handleMenuLogout}
+              className="w-full text-left px-4 py-2.5 text-sm text-[#6D8196] hover:bg-gray-50 transition-colors flex items-center gap-3 border-t border-gray-200"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Collapsed State Tooltip */}
+      {isCollapsed && !mobile && (
+        <div className="absolute left-full ml-3 px-3 py-2 bg-[#4A4A4A] text-[#FFFFE3] text-xs rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+          Click to open menu
+        </div>
       )}
     </div>
-  </div>
-));
+  );
+});
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
 
   // Selective store subscriptions to prevent unnecessary re-renders
@@ -246,6 +270,20 @@ export default function Sidebar() {
     state => state.proposals?.filter(p => !p.viewed).length || 0
   );
   const { user, logout } = useAuth();
+
+  // Track online/offline status in real-time
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Debounced mobile detection to improve performance
   useEffect(() => {
@@ -310,10 +348,9 @@ export default function Sidebar() {
     }
   }, [isMobileMenuOpen, isMobile]);
 
-  const mainNavItems = [
+  const primaryItems = [
     { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: Home },
-    { path: ROUTES.EDITOR, label: 'BidSenses', icon: FileText },
-    { path: ROUTES.VENDORS, label: 'Vendors', icon: Users },
+    { path: ROUTES.CHAT, label: 'Create RFP', icon: FileText },
     {
       path: ROUTES.PROPOSALS,
       label: 'Proposals',
@@ -322,13 +359,18 @@ export default function Sidebar() {
     },
   ];
 
+  const managementItems = [
+    { path: ROUTES.VENDORS, label: 'Vendors', icon: Users },
+    { path: ROUTES.EDITOR, label: 'BidSense Insights', icon: FileText },
+  ];
+
   // Admin nav items - only shown if user is admin
-  const adminNavItems = user?.role === 'admin' ? [
+  const adminItems = user?.role === 'admin' ? [
     { path: ROUTES.ADMIN_USERS, label: 'Manage Users', icon: Users },
     { path: ROUTES.ADMIN_SETTINGS, label: 'Admin Settings', icon: Settings },
   ] : [];
 
-  const bottomNavItems = [
+  const systemItems = [
     { path: ROUTES.HISTORY, label: 'History', icon: History },
     { path: ROUTES.SETTINGS, label: 'Settings', icon: Settings },
     { path: ROUTES.HELP, label: 'Help', icon: HelpCircle },
@@ -378,25 +420,14 @@ export default function Sidebar() {
         } w-[280px]`}
       >
         {/* Mobile Logo Section */}
-        <div className="h-16 border-b border-[#CBCBCB] flex items-center justify-between px-4 bg-white">
-          <Link 
-            to={ROUTES.DASHBOARD} 
-            className="flex items-center gap-3 hover:opacity-80 transition"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <div className="bg-[#4A4A4A] text-[#FFFFE3] rounded-lg p-2 shrink-0 font-bold text-sm">
-              BS
-            </div>
-            <span className="font-bold text-[#4A4A4A] text-base">BidSense</span>
-          </Link>
-        </div>
-
+      <div className="h-16 border-b border-[#CBCBCB] px-4"></div>
         <NavigationItems
           mobile={true}
           isCollapsed={isCollapsed}
-          mainNavItems={mainNavItems}
-          adminNavItems={adminNavItems}
-          bottomNavItems={bottomNavItems}
+          primaryItems={primaryItems}
+          managementItems={managementItems}
+          adminItems={adminItems}
+          systemItems={systemItems}
           isActive={isActive}
         />
         <UserSection
@@ -415,23 +446,8 @@ export default function Sidebar() {
           isCollapsed ? 'w-[72px]' : 'w-[220px]'
         }`}
       >
-        {/* Desktop Logo Section */}
-        <div className="h-16 border-b border-[#CBCBCB] flex items-center justify-between px-3 bg-white">
-          <Link 
-            to={ROUTES.DASHBOARD} 
-            className={`flex items-center gap-3 hover:opacity-80 transition ${
-              isCollapsed ? 'justify-center w-full' : ''
-            }`}
-            title="Go to Dashboard"
-          >
-            <div className="bg-[#4A4A4A] text-[#FFFFE3] rounded-lg p-2 shrink-0 font-bold text-xs flex items-center justify-center w-8 h-8">
-              BS
-            </div>
-            {!isCollapsed && (
-              <span className="font-bold text-[#4A4A4A] text-sm whitespace-nowrap">BidSense</span>
-            )}
-          </Link>
-          
+        {/* Desktop Header Space - Empty for alignment with Header */}
+        <div className="h-16 border-b border-[#CBCBCB] flex items-center justify-end px-3 bg-white">
           {/* Collapse Toggle */}
           {!isCollapsed && (
             <button
@@ -460,9 +476,10 @@ export default function Sidebar() {
         <NavigationItems
           mobile={false}
           isCollapsed={isCollapsed}
-          mainNavItems={mainNavItems}
-          adminNavItems={adminNavItems}
-          bottomNavItems={bottomNavItems}
+          primaryItems={primaryItems}
+          managementItems={managementItems}
+          adminItems={adminItems}
+          systemItems={systemItems}
           isActive={isActive}
         />
         <UserSection

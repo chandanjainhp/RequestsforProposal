@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldX } from 'lucide-react';
-import PublicLayout from '../layouts/PublicLayout';
+import PublicLayout from '../layout/PublicLayout';
 
 /**
  * 403 Unauthorized Error Page
