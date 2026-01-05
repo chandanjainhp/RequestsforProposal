@@ -86,9 +86,20 @@ export default function ChatPage() {
       const result = await parseBidSense(message);
       const confidence = typeof result.parse_confidence === 'number' ? result.parse_confidence : 0.3;
       const confidencePercent = Math.round(confidence * 100);
+      
+      // Translate confidence into user-friendly quality indicator
+      let qualityLabel = 'Good';
+      let qualityMessage = 'You can proceed, or add more details to improve it.';
+      if (confidencePercent >= 80) {
+        qualityLabel = 'Excellent';
+        qualityMessage = 'This is looking great. Ready to proceed?';
+      } else if (confidencePercent < 60) {
+        qualityLabel = 'Getting there';
+        qualityMessage = 'A few more details would help. Try adding quantity, timeline, or budget if you haven\'t already.';
+      }
 
       addMessage({
-        text: `✅ RFP parsed successfully! (Confidence: ${confidencePercent}%)`,
+        text: `✅ Draft quality: ${qualityLabel}\n${qualityMessage}`,
         isUser: false,
         timestamp: new Date(),
       });
@@ -129,9 +140,27 @@ export default function ChatPage() {
       }
     } catch (err) {
       console.error('Parse error:', err);
-      setError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to parse RFP. Please try again.');
+      // Convert errors into constructive guidance, not apologies
+      let guidanceText = 'I understood most of what you need, but I\'m missing a few details. Try adding:';
+      let details = [];
+      
+      const lowerMessage = message.toLowerCase();
+      if (!lowerMessage.includes('how many') && !lowerMessage.match(/\d+\s*(units?|items?|pieces?|chairs?|laptops?|servers?)/i)) {
+        details.push('• Quantity (how many items)');
+      }
+      if (!lowerMessage.includes('when') && !lowerMessage.match(/(days?|weeks?|months?|by|deadline)/i)) {
+        details.push('• Timeline (when you need them)');
+      }
+      if (!lowerMessage.includes('budget') && !lowerMessage.match(/\$|\busd\b|budget/i)) {
+        details.push('• Budget (if you have one)');
+      }
+      
+      if (details.length === 0) {
+        guidanceText = 'That helps! Let me know if there are any other details—specifications, location, or preferences?';
+      }
+      
       addMessage({
-        text: 'Sorry, I encountered an error while parsing. Please try again.',
+        text: guidanceText + (details.length > 0 ? '\n' + details.join('\n') : ''),
         isUser: false,
         timestamp: new Date(),
       });
@@ -289,25 +318,17 @@ export default function ChatPage() {
             {parsedBidSense && (
               <div className="flex flex-wrap gap-2">
                 <PrimaryButton
-                  onClick={handleSaveRfp}
+                  onClick={handleEditRfp}
                   loading={savingBidSense}
                   className="text-sm whitespace-nowrap"
                 >
-                  <Save size={16} className="inline mr-1" />
-                  Save as Draft
+                  Continue to Review →
                 </PrimaryButton>
                 <SecondaryButton
                   onClick={handleStartNew}
                   className="text-sm whitespace-nowrap"
                 >
-                  Start New
-                </SecondaryButton>
-                <SecondaryButton
-                  onClick={handleStartNew}
-                  className="text-sm whitespace-nowrap text-red-600 border-red-300"
-                >
-                  <Trash2 size={16} className="inline mr-1" />
-                  Discard
+                  Start Over
                 </SecondaryButton>
               </div>
             )}
@@ -315,8 +336,14 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Workflow Stepper */}
-      <BidSenseStepper currentStep={1} />
+      {/* Workflow Stepper with Step Goal */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <BidSenseStepper currentStep={1} />
+        <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+          <p className="text-sm font-medium text-blue-900 mb-1">Step 1: Describe Your Need</p>
+          <p className="text-sm text-blue-700">Tell us what you want to buy and any constraints you already know. Don't worry about formatting — we'll handle the details.</p>
+        </div>
+      </div>
 
       {/* Main Layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
@@ -342,15 +369,16 @@ export default function ChatPage() {
             {chatMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div className="max-w-2xl px-4">
-                  <div className="text-4xl mb-3">📝</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Create Your First RFP</h3>
-                  <p className="text-sm text-gray-600 mb-4">Start by describing what you need to procure. Be specific!</p>
-                  <div className="bg-gray-100 rounded-lg p-4 mb-6 text-left">
-                    <p className="text-xs font-semibold text-gray-700 mb-2">💡 Example:</p>
-                    <p className="text-xs text-gray-600 italic">
-                      "I need 50 ergonomic office chairs with lumbar support, total budget of $5,000, delivery within 2 weeks to NYC"
+                  <div className="text-4xl mb-3">�</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Describe What You Need</h3>
+                  <p className="text-sm text-gray-600 mb-6">Tell us about your purchase. Include what, how many, when you need it, and budget if you know it. We'll organize the details for you.</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-8 text-left">
+                    <p className="text-xs font-semibold text-blue-900 mb-3">💡 Example (just a guide):</p>
+                    <p className="text-sm text-blue-800 leading-relaxed italic">
+                      "We need 20 new laptops for our design team. They'll be using heavy design software, so we need good processors and graphics cards. Budget is around $40,000 total. We need them by the end of the month."
                     </p>
                   </div>
+                  <p className="text-xs text-gray-500 mb-6">Your exact words don't matter—just describe your need naturally.</p>
 
                   {/* Recent Drafts */}
                   {drafts.length > 0 && (
@@ -410,63 +438,68 @@ export default function ChatPage() {
           <div className="shrink-0 px-4 md:px-6 py-3 border-t bg-gray-50">
             {parsedBidSense && (
               <div className="mb-3">
-                <p className="text-xs font-semibold text-blue-900 mb-2">💡 Refine Your RFP</p>
+                <p className="text-xs font-semibold text-blue-900 mb-2">💡 Add More Details (Optional)</p>
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setInputValue('Add specifications: ')}
                     className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
                   >
-                    + Add Specifications
+                    + Specifications
                   </button>
                   <button
                     onClick={() => setInputValue('Add delivery address: ')}
                     className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
                   >
-                    + Add Delivery Address
+                    + Location
                   </button>
                   <button
                     onClick={() => setInputValue('Add warranty: ')}
                     className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
                   >
-                    + Add Warranty
+                    + Warranty
                   </button>
                 </div>
               </div>
             )}
 
+            <div className="mb-3">
+              {!parsedBidSense && (
+                <p className="text-xs text-gray-500 mb-2">💬 Example: "20 laptops for design work, $40K budget, need by end of month"</p>
+              )}
+            </div>
             <ChatInput
               onSend={handleSendMessage}
               loading={loading}
               placeholder={parsedBidSense
-                ? "Refine your RFP or type details to add..."
-                : "Describe what you need to procure (e.g., '50 office chairs under $5K, delivery in 2 weeks')"}
+                ? "Add more details or hit Continue to Review when ready..."
+                : "Describe your purchase need..."}
               value={inputValue}
               onChange={setInputValue}
             />
           </div>
         </div>
 
-        {/* Desktop Preview - Right Side */}
-        <div className="hidden lg:block lg:flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Preview</h3>
-          </div>
-
-          {parsedBidSense ? (
-            <BidSensePreviewExpanded
-              rfp={parsedBidSense}
-              onEdit={handleEditRfp}
-              editLoading={savingBidSense}
-              onFieldChange={handleFieldChange}
-            />
-          ) : (
-            <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-500">
-              <div className="text-4xl mb-3">👁️</div>
-              <p className="font-medium mb-1">Your RFP will appear here</p>
-              <p className="text-sm">As you describe your requirements, we'll extract and display the details</p>
+          {/* Desktop Preview - Right Side */}
+          <div className="hidden lg:block lg:flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Your Draft</h3>
             </div>
-          )}
-        </div>
+
+            {parsedBidSense ? (
+              <BidSensePreviewExpanded
+                rfp={parsedBidSense}
+                onEdit={handleEditRfp}
+                editLoading={savingBidSense}
+                onFieldChange={handleFieldChange}
+              />
+            ) : (
+              <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-500">
+                <div className="text-4xl mb-3">👁️</div>
+                <p className="font-medium mb-1">Your draft will appear here</p>
+                <p className="text-sm">As you describe your need, we'll organize the details</p>
+              </div>
+            )}
+          </div>
       </div>
 
       {/* Mobile Preview - Bottom Drawer */}
