@@ -5,8 +5,6 @@ import ChatInput from '../components/ChatInput';
 import ChatBubble from '../components/ChatBubble';
 import BidSenseStepper from '../components/BidSenseStepper';
 import BidSensePreviewExpanded from '../components/BidSensePreviewExpanded';
-import Breadcrumb from '../components/Breadcrumb';
-import StickyActionBar from '../components/StickyActionBar';
 import { parseBidSense, saveBidSense } from '../api/bidsense';
 import { useBidSenseStore } from '../store/bidsenseStore';
 import { useNotificationStore } from '../store/notificationStore';
@@ -89,17 +87,18 @@ export default function ChatPage() {
       
       // Translate confidence into user-friendly quality indicator
       let qualityLabel = 'Good';
-      let qualityMessage = 'You can proceed, or add more details to improve it.';
       if (confidencePercent >= 80) {
         qualityLabel = 'Excellent';
-        qualityMessage = 'This is looking great. Ready to proceed?';
       } else if (confidencePercent < 60) {
         qualityLabel = 'Getting there';
-        qualityMessage = 'A few more details would help. Try adding quantity, timeline, or budget if you haven\'t already.';
       }
 
       addMessage({
-        text: `✅ Draft quality: ${qualityLabel}\n${qualityMessage}`,
+        text: qualityLabel === 'Excellent' 
+          ? "Perfect! Ready to review your RFP whenever you are." 
+          : qualityLabel === 'Good'
+          ? "Looking good. Want to add more details, or ready to review?"
+          : "I got most of it. A few more details would help:\n• Quantity (how many?)\n• Timeline (when?)\n• Budget (if you have one)",
         isUser: false,
         timestamp: new Date(),
       });
@@ -252,8 +251,7 @@ export default function ChatPage() {
     }
     
     setParsedBidSense(updatedBidSense);
-    setSuccess('Field updated successfully');
-    setTimeout(() => setSuccess(null), 2000);
+    // No notification - preview updating IS the feedback
   };
 
   const handleEditRfp = async () => {
@@ -292,17 +290,10 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-warm-off-white">
+    <div className="w-full min-h-screen flex flex-col bg-white">
       {/* Page Header */}
-      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          {/* Breadcrumb Navigation */}
-          <div className="flex-1 min-w-0">
-            <Breadcrumb items={[
-              { label: 'Create RFP', href: null }
-            ]} />
-          </div>
-
+      <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* Save Status & Action Buttons */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {/* Save Status Indicator */}
@@ -336,13 +327,9 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Workflow Stepper with Step Goal */}
-      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+      {/* Workflow Stepper - Compact */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3">
         <BidSenseStepper currentStep={1} />
-        <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
-          <p className="text-sm font-medium text-blue-900 mb-1">Step 1: Describe Your Need</p>
-          <p className="text-sm text-blue-700">Tell us what you want to buy and any constraints you already know. Don't worry about formatting — we'll handle the details.</p>
-        </div>
       </div>
 
       {/* Main Layout */}
@@ -365,58 +352,21 @@ export default function ChatPage() {
           )}
 
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-2 bg-gray-50">
             {chatMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
-                <div className="max-w-2xl px-4">
-                  <div className="text-4xl mb-3">�</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Describe What You Need</h3>
-                  <p className="text-sm text-gray-600 mb-6">Tell us about your purchase. Include what, how many, when you need it, and budget if you know it. We'll organize the details for you.</p>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-8 text-left">
-                    <p className="text-xs font-semibold text-blue-900 mb-3">💡 Example (just a guide):</p>
-                    <p className="text-sm text-blue-800 leading-relaxed italic">
-                      "We need 20 new laptops for our design team. They'll be using heavy design software, so we need good processors and graphics cards. Budget is around $40,000 total. We need them by the end of the month."
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-500 mb-6">Your exact words don't matter—just describe your need naturally.</p>
-
-                  {/* Recent Drafts */}
-                  {drafts.length > 0 && (
-                    <div className="mt-8">
-                      <div className="flex justify-between items-center mb-4">
-                        <h4 className="text-md font-semibold text-gray-900">Recent Drafts</h4>
-                        <button
-                          onClick={handleClearAllDrafts}
-                          className="text-xs text-red-600 hover:text-red-800 px-2 py-1 border border-red-200 hover:border-red-300 rounded transition"
-                        >
-                          Clear All
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {drafts.slice(0, 3).map((draft) => (
-                          <div key={draft.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                              <h5 className="font-medium text-gray-900 truncate flex-1">{draft.title}</h5>
-                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded ml-2">Draft</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {draft.rfpData?.budget ? `$${draft.rfpData.budget.toLocaleString()}` : 'No budget set'} • 
-                              {draft.chatHistory?.length || 0} messages
-                            </p>
-                            <p className="text-xs text-gray-500 mb-3">
-                              Last edited {new Date(draft.lastSavedAt).toLocaleDateString()}
-                            </p>
-                            <button
-                              onClick={() => handleLoadDraft(draft.id)}
-                              className="w-full text-sm bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
-                            >
-                              Continue Editing
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="max-w-2xl">
+                  <h1 className="text-3xl font-600 text-gray-900 mb-2">Describe your purchase. We'll create the RFP for you.</h1>
+                  <p className="text-base text-gray-600 leading-relaxed mb-6">
+                    Include items, budget, and timeline — we'll structure everything automatically.
+                  </p>
+                  <button
+                    onClick={() => document.querySelector('textarea')?.focus()}
+                    className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition shadow-sm mb-6"
+                  >
+                    Generate RFP Preview →
+                  </button>
+                  <p className="text-sm text-gray-500 mb-8">You can edit everything before sending. Nothing is final yet.</p>
                 </div>
               </div>
             ) : (
@@ -434,69 +384,49 @@ export default function ChatPage() {
             )}
           </div>
 
-          {/* Refine Suggestions & Chat Input */}
-          <div className="shrink-0 px-4 md:px-6 py-3 border-t bg-gray-50">
-            {parsedBidSense && (
-              <div className="mb-3">
-                <p className="text-xs font-semibold text-blue-900 mb-2">💡 Add More Details (Optional)</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setInputValue('Add specifications: ')}
-                    className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
-                  >
-                    + Specifications
-                  </button>
-                  <button
-                    onClick={() => setInputValue('Add delivery address: ')}
-                    className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
-                  >
-                    + Location
-                  </button>
-                  <button
-                    onClick={() => setInputValue('Add warranty: ')}
-                    className="px-3 py-1.5 text-xs sm:text-sm border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition"
-                  >
-                    + Warranty
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="mb-3">
-              {!parsedBidSense && (
-                <p className="text-xs text-gray-500 mb-2">💬 Example: "20 laptops for design work, $40K budget, need by end of month"</p>
-              )}
-            </div>
+          {/* Chat Input */}
+          <div className="shrink-0 px-4 md:px-6 py-4 border-t bg-white">
             <ChatInput
               onSend={handleSendMessage}
               loading={loading}
-              placeholder={parsedBidSense
-                ? "Add more details or hit Continue to Review when ready..."
-                : "Describe your purchase need..."}
+              placeholder="List what you need, budget, and delivery timeline. Example: 20 laptops, ₹12L budget, delivery in 2 weeks."
               value={inputValue}
               onChange={setInputValue}
+              autoFocus={true}
             />
           </div>
         </div>
 
           {/* Desktop Preview - Right Side */}
-          <div className="hidden lg:block lg:flex-1 overflow-y-auto px-6 py-4 bg-gray-50">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Your Draft</h3>
+          <div className="hidden lg:block lg:flex-1 overflow-y-auto px-6 py-6 bg-white">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Your RFP</h3>
             </div>
 
             {parsedBidSense ? (
-              <BidSensePreviewExpanded
-                rfp={parsedBidSense}
-                onEdit={handleEditRfp}
-                editLoading={savingBidSense}
-                onFieldChange={handleFieldChange}
-              />
+              <>
+                <BidSensePreviewExpanded
+                  rfp={parsedBidSense}
+                  onEdit={handleEditRfp}
+                  editLoading={savingBidSense}
+                  onFieldChange={handleFieldChange}
+                />
+                <div className="mt-6 flex gap-2">
+                  <button
+                    onClick={handleEditRfp}
+                    disabled={savingBidSense}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    {savingBidSense ? 'Saving...' : 'Review & Send RFP'}
+                  </button>
+                </div>
+              </>
             ) : (
-              <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 text-center text-gray-500">
-                <div className="text-4xl mb-3">👁️</div>
-                <p className="font-medium mb-1">Your draft will appear here</p>
-                <p className="text-sm">As you describe your need, we'll organize the details</p>
+              <div className="bg-gray-50 rounded-lg border border-gray-200 p-8 text-center">
+                <p className="text-base font-medium text-gray-900 mb-2">Your RFP will appear here</p>
+                <p className="text-sm text-gray-600">
+                  Start typing on the left to see a live preview.
+                </p>
               </div>
             )}
           </div>
@@ -527,27 +457,23 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Floating Preview Button - Mobile Only */}
-      {parsedBidSense && isMobile && !showMobilePreview && (
-        <button
-          onClick={() => setShowMobilePreview(true)}
-          className="lg:hidden fixed bottom-20 right-4 btn-primary rounded-full px-4 py-3 shadow-lg hover:bg-opacity-90 transition z-40 flex items-center gap-2"
-        >
-          <span className="text-sm font-medium">View Preview</span>
-          <span className="bg-white text-primary rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-            1
-          </span>
-        </button>
-      )}
-
-      {/* Sticky Action Bar - Mobile Only */}
+      {/* Mobile CTA Bar */}
       {parsedBidSense && isMobile && (
-        <StickyActionBar
-          onSave={handleSaveRfp}
-          onCancel={handleStartNew}
-          saveLoading={savingBidSense}
-          showActions={true}
-        />
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 space-y-2">
+          <button
+            onClick={handleEditRfp}
+            disabled={savingBidSense}
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {savingBidSense ? 'Saving...' : 'Review & Send RFP'}
+          </button>
+          <button
+            onClick={handleStartNew}
+            className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+          >
+            Start Over
+          </button>
+        </div>
       )}
     </div>
   );

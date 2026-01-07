@@ -80,7 +80,7 @@ const NavigationItems = memo(({
   return (
     <>
       {/* Primary Tasks Section */}
-      <nav className={`${mobile ? 'px-3 py-4' : 'px-2 py-3'} space-y-0.5 overflow-y-auto`}>
+      <nav className={`${mobile ? 'px-3 py-4' : 'px-2 py-3'} space-y-0.5`}>
         {(!isCollapsed || mobile) && (
           <div className={sectionLabelClass}>Primary Tasks</div>
         )}
@@ -130,21 +130,9 @@ const UserSection = memo(({
   mobile = false,
   isCollapsed,
   user,
-  handleLogout,
-  isOnline
+  handleLogout
 }) => {
   const [showMenu, setShowMenu] = useState(false);
-
-  // Get user initials safely
-  const getInitials = () => {
-    if (!user?.name) return 'U';
-    return user.name
-      .split(' ')
-      .map(n => n[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-  };
 
   // Get user role badge color
   const getRoleBadgeColor = () => {
@@ -164,45 +152,19 @@ const UserSection = memo(({
   };
 
   return (
-    <div className={`border-t border-[#CBCBCB] ${mobile ? 'p-4' : 'p-4'} bg-gradient-to-b from-gray-50 to-white`}>
-      {/* Connection Status */}
-      {(!isCollapsed || mobile) && (
-        <div className="mb-3">
-          <NetworkStatusIndicator className="text-xs" />
-        </div>
-      )}
-
+    <div className={`border-t border-[#CBCBCB] ${mobile ? 'p-4' : 'p-4'} bg-white`}>
       {/* User Card - Clickable dropdown trigger */}
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className={`w-full relative text-left p-3 rounded-lg hover:bg-gray-100 transition-colors ${isCollapsed && !mobile ? 'px-2 py-2' : ''}`}
+        className={`w-full relative text-left p-3 rounded-lg hover:bg-gray-100 transition-colors`}
       >
-        <div className={`flex items-center gap-3 ${isCollapsed && !mobile ? 'justify-center flex-col' : ''}`}>
-          {/* Avatar with Online Status */}
-          <div className="relative flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#6D8196] to-[#4A4A4A] rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-[#FFFFE3] text-xs font-bold">
-                {getInitials()}
-              </span>
-            </div>
-            {/* Online/Offline Status Indicator */}
-            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white shadow-sm ${
-              isOnline ? 'bg-green-500' : 'bg-gray-400'
-            }`}></div>
+        {(!isCollapsed || mobile) && (
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-[#4A4A4A] truncate">
+              {displayName}
+            </h3>
           </div>
-
-          {/* User Info - Only show when expanded or on mobile */}
-          {(!isCollapsed || mobile) && (
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-[#4A4A4A] truncate">
-                {displayName}
-              </h3>
-              <p className="text-xs text-[#6D8196] truncate">
-                {displayEmail}
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </button>
 
       {/* Dropdown Menu */}
@@ -262,7 +224,6 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
 
   // Selective store subscriptions to prevent unnecessary re-renders
@@ -270,20 +231,6 @@ export default function Sidebar() {
     state => state.proposals?.filter(p => !p.viewed).length || 0
   );
   const { user, logout } = useAuth();
-
-  // Track online/offline status in real-time
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   // Debounced mobile detection to improve performance
   useEffect(() => {
@@ -303,9 +250,12 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Close mobile menu when route changes
+  // Close mobile menu when route changes (using callback ref instead of setState in effect)
   useEffect(() => {
-    setIsMobileMenuOpen(false);
+    const timeoutId = setTimeout(() => {
+      setIsMobileMenuOpen(false);
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [location.pathname]);
 
   // Prevent body scroll when mobile menu is open with proper cleanup
@@ -417,7 +367,7 @@ export default function Sidebar() {
         aria-hidden={!isMobileMenuOpen}
         className={`fixed left-0 top-0 h-screen bg-white shadow-2xl z-50 md:hidden flex flex-col transition-transform duration-300 ease-in-out ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        } w-[280px]`}
+        } w-70`}
       >
         {/* Mobile Logo Section */}
       <div className="h-16 border-b border-[#CBCBCB] px-4"></div>
@@ -443,7 +393,7 @@ export default function Sidebar() {
         role="navigation"
         aria-label="Main navigation"
         className={`fixed left-0 top-0 h-screen bg-white border-r border-[#CBCBCB] shadow-sm transition-all duration-300 z-30 hidden md:flex flex-col ${
-          isCollapsed ? 'w-[72px]' : 'w-[220px]'
+          isCollapsed ? 'w-24' : 'w-72'
         }`}
       >
         {/* Desktop Header Space - Empty for alignment with Header */}
@@ -482,17 +432,12 @@ export default function Sidebar() {
           systemItems={systemItems}
           isActive={isActive}
         />
-        <UserSection
-          mobile={false}
-          isCollapsed={isCollapsed}
-          user={user}
-          handleLogout={handleLogout}
-        />
+    
       </aside>
 
       {/* Spacer for desktop to prevent content overlap */}
-      <div className={`hidden md:block transition-all duration-300 flex-shrink-0 ${
-        isCollapsed ? 'w-[72px]' : 'w-[220px]'
+      <div className={`hidden md:block transition-all duration-300 shrink-0 ${
+        isCollapsed ? 'w-24' : 'w-72'
       }`} />
     </>
   );
