@@ -8,25 +8,25 @@ export const parseBidSense = async (message) => {
 
 // Save parsed BidSense
 export const saveBidSense = async (payload) => {
-  const res = await api.post('/api/bidsenses', { parsed_bidsense: payload });
+  const res = await api.post('/api/bidsense', { parsed_bidsense: payload });
   return res.data;
 };
 
 // Get all BidSenses
 export const getBidSenses = async (params = {}) => {
-  const res = await api.get('/api/bidsenses', { params });
+  const res = await api.get('/api/bidsense', { params });
   return res.data;
 };
 
 // Get single BidSense
 export const getBidSense = async (id) => {
-  const res = await api.get(`/api/bidsenses/${id}`);
+  const res = await api.get(`/api/bidsense/${id}`);
   return res.data.bidsense || res.data;
 };
 
 // Update BidSense
 export const updateBidSense = async (id, payload) => {
-  const res = await api.put(`/api/bidsenses/${id}`, payload);
+  const res = await api.put(`/api/bidsense/${id}`, payload);
   return res.data;
 };
 

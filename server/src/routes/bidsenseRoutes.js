@@ -21,6 +21,7 @@ router.use(authenticate);
 // Validation rules
 const bidSenseValidation = [
   body('title')
+    .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
     .withMessage('Title must be between 2 and 100 characters'),
@@ -30,6 +31,7 @@ const bidSenseValidation = [
     .isLength({ max: 1000 })
     .withMessage('Description cannot exceed 1000 characters'),
   body('budget')
+    .optional()
     .isNumeric()
     .withMessage('Budget must be a number')
     .isFloat({ min: 0 })

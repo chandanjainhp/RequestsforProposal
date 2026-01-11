@@ -31,10 +31,12 @@ export const getBidSenseById = asyncHandler(async (req, res, next) => {
 
 // Create BidSense
 export const createBidSense = asyncHandler(async (req, res, next) => {
-  const { title, description, budget } = req.body;
+  // Handle both direct format and parsed_bidsense wrapper format
+  const payload = req.body.parsed_bidsense || req.body;
+  const { title, description, budget, ...otherFields } = payload;
 
   // Additional validation
-  if (budget < 0) {
+  if (budget && budget < 0) {
     throw new ValidationError('Budget must be positive', [
       { field: 'budget', message: 'Budget cannot be negative', value: budget }
     ]);
@@ -42,17 +44,20 @@ export const createBidSense = asyncHandler(async (req, res, next) => {
 
   try {
     const bidsense = await BidSense.create({
-      title,
-      description,
-      budget,
-      userId: req.user.id
+      title: title || 'Untitled RFP',
+      description: description || '',
+      budget: budget || 0,
+      userId: req.user.id,
+      ...otherFields
     });
 
     logger.info(`BidSense created: ${bidsense._id} by user ${req.user.id}`);
 
     res.status(201).json({
       success: true,
-      data: bidsense
+      data: bidsense,
+      _id: bidsense._id,
+      bidsense_id: bidsense._id
     });
   } catch (error) {
     if (error.name === 'MongoError') {

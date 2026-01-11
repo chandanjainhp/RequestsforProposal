@@ -8,7 +8,6 @@ const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 const logger = require('./utils/logger');
 const authRoutes = require('./routes/authRoutes');
 const rfpRoutes = require('./routes/rfp.router');
-const rfpsRoutes = require('./routes/rfps.router');
 const bidsenseRoutes = require('./routes/bidsenseRoutes');
 const vendorRoutes = require('./routes/vendor.router');
 const comparisonRoutes = require('./routes/comparison.router');
@@ -77,7 +76,6 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/rfp', rfpRoutes);
-app.use('/api/rfps', rfpsRoutes);
 app.use('/api/bidsense', bidsenseRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/comparison', comparisonRoutes);
